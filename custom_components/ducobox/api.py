@@ -33,13 +33,12 @@ class DucoBoxApi:
 
                 general = data.get("General", {})
                 board = general.get("Board", {})
+                lan = general.get("Lan", {})
 
                 box_name = board.get("BoxName", {}).get("Val", "DucoBox")
-                api_version = (
-                    data.get("ApiInfo", {}).get("PublicApiVersion", {}).get("Val", "")
-                )
-                serial_number = board.get("Serial", {}).get("Val", "")
-                mac_address = board.get("Lan", {}).get("Mac", {}).get("Val", "")
+                api_version = board.get("PublicApiVersion", {}).get("Val", "")
+                serial_number = board.get("SerialDucoBox", {}).get("Val", "")
+                mac_address = lan.get("Mac", {}).get("Val", "")
 
                 return DucoBoxDeviceInfo(
                     model=DUCOBOX_BOX_NAMES.get(box_name, box_name),
