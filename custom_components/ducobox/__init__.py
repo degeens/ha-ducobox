@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from .api import DucoBoxApi
 from .coordinator import DucoBoxCoordinator
 
-PLATFORMS: list[Platform] = [Platform.FAN, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.FAN, Platform.SELECT, Platform.SENSOR]
 
 type DucoBoxConfigEntry = ConfigEntry[DucoBoxCoordinator]
 
