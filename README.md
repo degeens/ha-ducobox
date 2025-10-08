@@ -10,20 +10,20 @@ A Home Assistant integration for DucoBox ventilation systems using the Connectiv
 
 This integration enables controlling and monitoring DucoBox ventilation systems.
 
-### Fan entity
+### Fan entities
 
-- **Preset modes**: Support for all ventilation states (`Auto`, `Auto 1`, `Auto 2`, `Auto 3`, `Continuous 1`, `Continuous 2`, `Continuous 3`, `Empty`, `Manual 1`, `Manual 2`, and `Manual 3`)
+- **Ventilation**: Select ventilation state using preset mode
 
 ### Select entities
 
-- **Ventilation State**: Select ventilation state (`Auto`, `Auto 1`, `Auto 2`, `Auto 3`, `Continuous 1`, `Continuous 2`, `Continuous 3`, `Empty`, `Manual 1`, `Manual 2`, and `Manual 3`)
+- **Ventilation State**: Select ventilation state
 
 ### Sensor entities
 
 - **Air Quality Index Relative Humidity**: An indication of the current air quality based on relative humidity (%)
 - **Target Flow Level**: Current target flow level (%)
-- **Ventilation Mode**: Current ventilation mode (`Auto` or `Manual`)
-- **Ventilation State**: Current ventilation state (`Auto`, `Auto 1`, `Auto 2`, `Auto 3`, `Continuous 1`, `Continuous 2`, `Continuous 3`, `Empty`, `Manual 1`, `Manual 2`, and `Manual 3`)
+- **Ventilation Mode**: Current ventilation mode (`AUTO` or `MANU`)
+- **Ventilation State**: Current ventilation state
 - **Ventilation State End Time**: Timestamp when current ventilation state will end (or `Unknown` when never ending)
 - **Ventilation State Remaining Time**: Remaining time in current ventilation state in seconds (or `Unknown` when never ending)
 
