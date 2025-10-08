@@ -21,42 +21,12 @@
     "entity": {
         "fan": {
             "ventilation": {
-                "name": "Ventilation",
-                "state_attributes": {
-                    "preset_mode": {
-                        "state": {
-                            "aut1": "Auto 1",
-                            "aut2": "Auto 2",
-                            "aut3": "Auto 3",
-                            "auto": "Auto",
-                            "cnt1": "Continuous 1",
-                            "cnt2": "Continuous 2",
-                            "cnt3": "Continuous 3",
-                            "empt": "Empty",
-                            "man1": "Manual 1",
-                            "man2": "Manual 2",
-                            "man3": "Manual 3"
-                        }
-                    }
-                }
+                "name": "Ventilation"
             }
         },
         "select": {
             "ventilation_state": {
-                "name": "Ventilation State",
-                "state": {
-                    "aut1": "Auto 1",
-                    "aut2": "Auto 2",
-                    "aut3": "Auto 3",
-                    "auto": "Auto",
-                    "cnt1": "Continuous 1",
-                    "cnt2": "Continuous 2",
-                    "cnt3": "Continuous 3",
-                    "empt": "Empty",
-                    "man1": "Manual 1",
-                    "man2": "Manual 2",
-                    "man3": "Manual 3"
-                }
+                "name": "Ventilation State"
             }
         },
         "sensor": {
@@ -74,20 +44,7 @@
                 }
             },
             "state": {
-                "name": "Ventilation State",
-                "state": {
-                    "aut1": "Auto 1",
-                    "aut2": "Auto 2",
-                    "aut3": "Auto 3",
-                    "auto": "Auto",
-                    "cnt1": "Continuous 1",
-                    "cnt2": "Continuous 2",
-                    "cnt3": "Continuous 3",
-                    "empt": "Empty",
-                    "man1": "Manual 1",
-                    "man2": "Manual 2",
-                    "man3": "Manual 3"
-                }
+                "name": "Ventilation State"
             },
             "time_state_end": {
                 "name": "Ventilation State End Time"

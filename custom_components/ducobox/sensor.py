@@ -19,7 +19,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import UTC
 
 from . import DucoBoxConfigEntry
-from .const import DUCOBOX_VENTILATION_MODES, DUCOBOX_VENTILATION_STATES
+from .const import DUCOBOX_VENTILATION_MODES
 from .coordinator import DucoBoxCoordinator
 from .entity import DucoBoxEntity
 from .models import DucoBoxData
@@ -66,7 +66,7 @@ SENSORS: tuple[DucoBoxSensorEntityDescription, ...] = (
         key="state",
         translation_key="state",
         device_class=SensorDeviceClass.ENUM,
-        options=DUCOBOX_VENTILATION_STATES,
+        options=[],  # Will be set dynamically from coordinator
         value_fn=lambda data: data.state,
     ),
     DucoBoxSensorEntityDescription(
@@ -120,3 +120,10 @@ class DucoBoxSensor(DucoBoxEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    def options(self) -> list[str] | None:
+        """Return the list of available options for enum sensors."""
+        if self.entity_description.key == "state":
+            return self.coordinator.ventilation_state_options
+        return self.entity_description.options

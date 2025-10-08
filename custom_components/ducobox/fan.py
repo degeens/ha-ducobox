@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DucoBoxConfigEntry
-from .const import DUCOBOX_VENTILATION_STATES
 from .coordinator import DucoBoxCoordinator
 from .entity import DucoBoxEntity
 
@@ -27,7 +26,6 @@ class DucoBoxFan(DucoBoxEntity, FanEntity):
     """Defines a DucoBox fan."""
 
     _attr_supported_features = FanEntityFeature.PRESET_MODE
-    _attr_preset_modes = DUCOBOX_VENTILATION_STATES
     _attr_translation_key = "ventilation"
 
     def __init__(
@@ -38,6 +36,7 @@ class DucoBoxFan(DucoBoxEntity, FanEntity):
         super().__init__(coordinator)
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_fan"
+        self._attr_preset_modes = coordinator.ventilation_state_options
 
     @property
     def is_on(self) -> bool:

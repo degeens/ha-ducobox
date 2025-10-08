@@ -106,10 +106,10 @@ class DucoConnectivityBoardApi:
         iaq_rh = sensor.get("IaqRh", {}).get("Val")
 
         return DucoBoxData(
-            state=state.lower() if state else None,
+            state=state,
             time_state_remain=time_state_remain,
             time_state_end=time_state_end,
-            mode=mode.lower() if mode else None,
+            mode=mode,
             flow_lvl_tgt=flow_lvl_tgt,
             iaq_rh=iaq_rh,
         )
@@ -160,7 +160,7 @@ class DucoConnectivityBoardApi:
 
         """
         url = f"{self._base_url}/action/nodes/{BOX_NODE_ID}"
-        payload = {"Action": "SetVentilationState", "Val": state.upper()}
+        payload = {"Action": "SetVentilationState", "Val": state}
 
         response = await self.session.post(url, json=payload)
         response.raise_for_status()

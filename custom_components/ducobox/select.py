@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DucoBoxConfigEntry
-from .const import DUCOBOX_VENTILATION_STATES
 from .coordinator import DucoBoxCoordinator
 from .entity import DucoBoxEntity
 
@@ -27,7 +26,6 @@ class DucoBoxVentilationStateSelect(DucoBoxEntity, SelectEntity):
     """Defines a DucoBox ventilation state select entity."""
 
     _attr_translation_key = "ventilation_state"
-    _attr_options = DUCOBOX_VENTILATION_STATES
 
     def __init__(
         self,
@@ -37,6 +35,7 @@ class DucoBoxVentilationStateSelect(DucoBoxEntity, SelectEntity):
         super().__init__(coordinator)
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_ventilation_state"
+        self._attr_options = coordinator.ventilation_state_options
 
     @property
     def current_option(self) -> str | None:

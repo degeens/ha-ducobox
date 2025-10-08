@@ -25,6 +25,7 @@ class DucoBoxCoordinator(DataUpdateCoordinator[DucoBoxData]):
 
     config_entry: ConfigEntry
     device_info: DucoBoxDeviceInfo
+    ventilation_state_options: list[str]
 
     def __init__(
         self,
@@ -45,30 +46,23 @@ class DucoBoxCoordinator(DataUpdateCoordinator[DucoBoxData]):
         self.config_entry = config_entry
 
     async def async_setup(self) -> None:
-        """
-        Set up the coordinator.
-
-        Fetch device info.
-        """
+        """Set up the coordinator."""
         try:
             self.device_info = await self.api.async_get_device_info()
-        except Exception as err:
-            msg = f"Failed to get device info: {err}"
+            self.ventilation_state_options = (
+                await self.api.async_get_ventilation_state_options()
+            )
+        except ClientError as err:
+            msg = f"Failed to setup coordinator: {err}"
             raise UpdateFailed(msg) from err
-
-        _LOGGER.debug(
-            "Device info fetched during coordinator setup: %s", self.device_info
-        )
 
     async def _async_update_data(self) -> DucoBoxData:
         """Update the data."""
         try:
             data = await self.api.async_get_data()
-        except Exception as err:
-            msg = f"Failed to get data: {err}"
+        except ClientError as err:
+            msg = f"Failed to update coordinator data: {err}"
             raise UpdateFailed(msg) from err
-
-        _LOGGER.debug("Data fetched during coordinator update: %s", data)
 
         return data
 
