@@ -14,6 +14,10 @@ This integration enables controlling and monitoring DucoBox ventilation systems.
 
 - **Preset modes**: Support for all ventilation states (`Auto`, `Auto 1`, `Auto 2`, `Auto 3`, `Continuous 1`, `Continuous 2`, `Continuous 3`, `Empty`, `Manual 1`, `Manual 2`, and `Manual 3`)
 
+### Select entities
+
+- **Ventilation State**: Select ventilation state (`Auto`, `Auto 1`, `Auto 2`, `Auto 3`, `Continuous 1`, `Continuous 2`, `Continuous 3`, `Empty`, `Manual 1`, `Manual 2`, and `Manual 3`)
+
 ### Sensor entities
 
 - **Air Quality Index Relative Humidity**: An indication of the current air quality based on relative humidity (%)
