@@ -114,6 +114,37 @@ class DucoConnectivityBoardApi:
             iaq_rh=iaq_rh,
         )
 
+    async def async_get_ventilation_state_options(self) -> list[str]:
+        """
+        Get available ventilation state options from the DucoBox device.
+
+        Returns:
+            list[str]: List of available ventilation states.
+
+        Raises:
+            ClientError: If ventilation state options cannot be retrieved.
+            ClientResponseError: If the HTTP request fails.
+
+        """
+        url = f"{self._base_url}/action/nodes/{BOX_NODE_ID}"
+        params = {"action": "SetVentilationState"}
+
+        response = await self.session.get(url, params=params)
+        response.raise_for_status()
+        data = await response.json()
+
+        actions = data.get("Actions")
+        if not isinstance(actions, list) or len(actions) == 0:
+            msg = f"Failed to get ventilation state options from {url}"
+            raise ClientError(msg)
+
+        options = actions[0].get("Enum")
+        if not isinstance(options, list) or len(options) == 0:
+            msg = f"Failed to get ventilation state options from {url}"
+            raise ClientError(msg)
+
+        return options
+
     async def async_set_ventilation_state(self, state: str) -> bool:
         """
         Set the ventilation state on the DucoBox device.
