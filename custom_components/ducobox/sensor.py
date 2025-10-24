@@ -77,6 +77,14 @@ SENSORS: tuple[DucoBoxSensorEntityDescription, ...] = (
         value_fn=lambda data: data.flow_lvl_tgt,
     ),
     DucoBoxSensorEntityDescription(
+        key="rh",
+        translation_key="rh",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.rh,
+    ),
+    DucoBoxSensorEntityDescription(
         key="iaq_rh",
         translation_key="iaq_rh",
         native_unit_of_measurement=PERCENTAGE,

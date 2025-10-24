@@ -24,4 +24,5 @@ class DucoBoxData:
     time_state_end: int | None = None
     mode: str | None = None
     flow_lvl_tgt: int | None = None
+    rh: int | None = None
     iaq_rh: int | None = None
