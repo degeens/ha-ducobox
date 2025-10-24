@@ -20,6 +20,7 @@ This integration enables controlling and monitoring DucoBox ventilation systems.
 
 ### Sensor entities
 
+- **Relative Humidity**: Current relative humidity (%)
 - **Air Quality Index Relative Humidity**: An indication of the current air quality based on relative humidity (%)
 - **Target Flow Level**: Current target flow level (%)
 - **Ventilation Mode**: Current ventilation mode (`AUTO` or `MANU`)
@@ -30,15 +31,15 @@ This integration enables controlling and monitoring DucoBox ventilation systems.
 ## Requirements
 
 - Home Assistant 2025.10.1 or newer
-- A DucoBox ventilation system with Duco Connectivity Board 2.0 installed.
-- Local network access to your Duco Connectivity Board 2.0.
+- A DucoBox ventilation system with Duco Connectivity Board 2.0 installed
+- Local network access to your Duco Connectivity Board 2.0
 
 ## Compatibility
 
 ### Tested configuration
 This integration has been tested and verified to work with:
 - DucoBox Silent Connect
-- Duco Connectivity Board 2.0 (API version 2.4).
+- Duco Connectivity Board 2.0 (API version 2.5)
 
 ### Supported models
 

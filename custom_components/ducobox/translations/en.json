@@ -43,6 +43,9 @@
                     "manu": "Manual"
                 }
             },
+            "rh": {
+                "name": "Relative Humidity"
+            },
             "state": {
                 "name": "Ventilation State"
             },

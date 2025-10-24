@@ -88,7 +88,7 @@ class DucoConnectivityBoardApi:
         """
         url = f"{self._base_url}/info/nodes/{BOX_NODE_ID}"
         params = {
-            "parameter": "State,TimeStateRemain,TimeStateEnd,Mode,FlowLvlTgt,IaqRh"
+            "parameter": "State,TimeStateRemain,TimeStateEnd,Mode,FlowLvlTgt,Rh,IaqRh"
         }
 
         response = await self.session.get(url, params=params)
@@ -103,6 +103,7 @@ class DucoConnectivityBoardApi:
         time_state_end = ventilation.get("TimeStateEnd", {}).get("Val")
         mode = ventilation.get("Mode", {}).get("Val")
         flow_lvl_tgt = ventilation.get("FlowLvlTgt", {}).get("Val")
+        rh = sensor.get("Rh", {}).get("Val")
         iaq_rh = sensor.get("IaqRh", {}).get("Val")
 
         return DucoBoxData(
@@ -111,6 +112,7 @@ class DucoConnectivityBoardApi:
             time_state_end=time_state_end,
             mode=mode,
             flow_lvl_tgt=flow_lvl_tgt,
+            rh=rh,
             iaq_rh=iaq_rh,
         )
 
