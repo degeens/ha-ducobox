@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up DucoBox",
+        "description": "Enter the IP address or hostname of your DucoBox device.",
+        "data": {
+          "host": "Host"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Discovered DucoBox device",
+        "description": "Do you want to add the DucoBox {name} ({host}) to Home Assistant?"
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the DucoBox device. Please check the IP address and try again.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This DucoBox device is already configured.",
+      "cannot_connect": "Failed to connect to the discovered device."
+    }
+  },
+  "title": "DucoBox"
+}

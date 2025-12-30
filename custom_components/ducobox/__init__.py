@@ -9,10 +9,17 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .api import DucoConnectivityBoardApi
+from .api import detect_api_type
 from .coordinator import DucoBoxCoordinator
 
-PLATFORMS: list[Platform] = [Platform.FAN, Platform.SELECT, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
+    Platform.FAN,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 type DucoBoxConfigEntry = ConfigEntry[DucoBoxCoordinator]
 
@@ -20,7 +27,10 @@ type DucoBoxConfigEntry = ConfigEntry[DucoBoxCoordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: DucoBoxConfigEntry) -> bool:
     """Set up DucoBox from a config entry."""
     session = async_get_clientsession(hass)
-    api = DucoConnectivityBoardApi(entry.data[CONF_HOST], session)
+
+    # Detect which API type the device supports
+    api_class = await detect_api_type(entry.data[CONF_HOST], session)
+    api = api_class(entry.data[CONF_HOST], session)
 
     coordinator = DucoBoxCoordinator(hass, entry, api)
 

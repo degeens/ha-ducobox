@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import timedelta
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ServerTimeoutError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import DucoConnectivityBoardApi
+from .api import DucoApiBase
 from .const import DOMAIN
 from .models import DucoBoxData, DucoBoxDeviceInfo
 
@@ -31,14 +32,14 @@ class DucoBoxCoordinator(DataUpdateCoordinator[DucoBoxData]):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        api: DucoConnectivityBoardApi,
+        api: DucoApiBase,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             logger=_LOGGER,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=timedelta(seconds=10),
             config_entry=config_entry,
             always_update=False,
         )
@@ -60,7 +61,15 @@ class DucoBoxCoordinator(DataUpdateCoordinator[DucoBoxData]):
         """Update the data."""
         try:
             data = await self.api.async_get_data()
+        except (asyncio.TimeoutError, ServerTimeoutError) as err:
+            # Timeout errors are common due to network issues - log at debug level
+            # and only raise UpdateFailed without logging error
+            _LOGGER.debug("Timeout fetching data from DucoBox: %s", err)
+            msg = f"Timeout connecting to DucoBox: {err}"
+            raise UpdateFailed(msg) from err
         except ClientError as err:
+            # Other client errors might indicate real problems - log at warning level
+            _LOGGER.warning("Error fetching data from DucoBox: %s", err)
             msg = f"Failed to update coordinator data: {err}"
             raise UpdateFailed(msg) from err
 
@@ -77,4 +86,17 @@ class DucoBoxCoordinator(DataUpdateCoordinator[DucoBoxData]):
             await self.async_request_refresh()
         except ClientError as err:
             msg = f"Failed to set ventilation state to {state}: {err}"
+            raise HomeAssistantError(msg) from err
+
+    async def async_set_flow_override(self, percentage: int) -> None:
+        """Set the flow override percentage (0-100% or 255 to clear)."""
+        try:
+            success = await self.api.async_set_node_override(1, percentage)
+            if not success:
+                msg = f"Failed to set flow override to {percentage}%"
+                raise HomeAssistantError(msg)
+
+            await self.async_request_refresh()
+        except ClientError as err:
+            msg = f"Failed to set flow override to {percentage}%: {err}"
             raise HomeAssistantError(msg) from err
