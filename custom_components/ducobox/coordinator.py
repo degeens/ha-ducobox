@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from datetime import timedelta
 
 from aiohttp import ClientError, ServerTimeoutError
@@ -39,12 +40,16 @@ class DucoBoxCoordinator(DataUpdateCoordinator[DucoBoxData]):
             hass,
             logger=_LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=10),
+            update_interval=timedelta(seconds=15),
             config_entry=config_entry,
             always_update=False,
         )
         self.api = api
         self.config_entry = config_entry
+        self._last_energy_fetch = 0.0
+        self._last_nodes_fetch = 0.0
+        self._cached_energy = None
+        self._cached_nodes = []
 
     async def async_setup(self) -> None:
         """Set up the coordinator."""
@@ -59,8 +64,36 @@ class DucoBoxCoordinator(DataUpdateCoordinator[DucoBoxData]):
 
     async def _async_update_data(self) -> DucoBoxData:
         """Update the data."""
+        current_time = time.time()
+
+        # Determine what to fetch based on time since last fetch
+        # Box data: always fetch (every 15s with coordinator interval)
+        # Nodes: fetch if >9s since last fetch
+        # Energy: fetch if >60s since last fetch
+        fetch_nodes = (current_time - self._last_nodes_fetch) >= 9
+        fetch_energy = (current_time - self._last_energy_fetch) >= 60
+
         try:
-            data = await self.api.async_get_data()
+            data = await self.api.async_get_data(
+                fetch_energy=fetch_energy,
+                fetch_nodes=fetch_nodes,
+            )
+
+            # Update cache and timestamps for what we fetched
+            if fetch_energy:
+                self._cached_energy = data.energy_info
+                self._last_energy_fetch = current_time
+            elif self._cached_energy is not None:
+                # Use cached energy if we didn't fetch new data
+                data.energy_info = self._cached_energy
+
+            if fetch_nodes:
+                self._cached_nodes = data.nodes
+                self._last_nodes_fetch = current_time
+            elif self._cached_nodes:
+                # Use cached nodes if we didn't fetch new data
+                data.nodes = self._cached_nodes
+
         except (asyncio.TimeoutError, ServerTimeoutError) as err:
             # Timeout errors are common due to network issues - log at debug level
             # and only raise UpdateFailed without logging error

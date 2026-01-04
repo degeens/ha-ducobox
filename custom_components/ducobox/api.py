@@ -20,7 +20,7 @@ from .models import (
 _LOGGER = logging.getLogger(__name__)
 
 BOX_NODE_ID = 1  # Assuming node 1 is always the BOX node
-REQUEST_TIMEOUT = ClientTimeout(total=30)  # 30 second timeout for requests
+REQUEST_TIMEOUT = ClientTimeout(total=10)  # 10 second timeout for requests
 
 
 async def detect_api_type(host: str, session: ClientSession) -> type[DucoApiBase]:
@@ -97,7 +97,9 @@ class DucoApiBase(ABC):
         """Get device information from the DucoBox device."""
 
     @abstractmethod
-    async def async_get_data(self) -> DucoBoxData:
+    async def async_get_data(
+        self, fetch_energy: bool = True, fetch_nodes: bool = True
+    ) -> DucoBoxData:
         """Fetch data from the DucoBox device."""
 
     @abstractmethod
@@ -184,9 +186,15 @@ class DucoConnectivityBoardApi(DucoApiBase):
             mac_address=mac_address,
         )
 
-    async def async_get_data(self) -> DucoBoxData:
+    async def async_get_data(
+        self, fetch_energy: bool = True, fetch_nodes: bool = True
+    ) -> DucoBoxData:
         """
         Fetch data from the DucoBox device.
+
+        Args:
+            fetch_energy: Whether to fetch energy info (default True).
+            fetch_nodes: Whether to fetch node data (default True).
 
         Returns:
             DucoBoxData: Object containing current device data.
@@ -215,9 +223,9 @@ class DucoConnectivityBoardApi(DucoApiBase):
         rh = sensor.get("Rh", {}).get("Val")
         iaq_rh = sensor.get("IaqRh", {}).get("Val")
 
-        # Fetch additional data (stub implementations for now)
-        energy_info = await self.async_get_energy_info()
-        nodes = await self.async_get_nodes()
+        # Conditionally fetch additional data based on parameters
+        energy_info = await self.async_get_energy_info() if fetch_energy else None
+        nodes = await self.async_get_nodes() if fetch_nodes else []
 
         return DucoBoxData(
             state=state,
@@ -418,9 +426,15 @@ class DucoCommunicationPrintApi(DucoApiBase):
             mac_address=mac_address,
         )
 
-    async def async_get_data(self) -> DucoBoxData:
+    async def async_get_data(
+        self, fetch_energy: bool = True, fetch_nodes: bool = True
+    ) -> DucoBoxData:
         """
         Fetch data from the DucoBox device.
+
+        Args:
+            fetch_energy: Whether to fetch energy info (default True).
+            fetch_nodes: Whether to fetch node data (default True).
 
         Returns:
             DucoBoxData: Object containing current device data.
@@ -450,9 +464,9 @@ class DucoCommunicationPrintApi(DucoApiBase):
         time_state_remain = data.get("cntdwn")
         time_state_end = data.get("endtime")
 
-        # Fetch additional data
-        energy_info = await self.async_get_energy_info()
-        nodes = await self.async_get_nodes()
+        # Conditionally fetch additional data based on parameters
+        energy_info = await self.async_get_energy_info() if fetch_energy else None
+        nodes = await self.async_get_nodes() if fetch_nodes else []
 
         return DucoBoxData(
             state=state,
@@ -564,7 +578,7 @@ class DucoCommunicationPrintApi(DucoApiBase):
                     url = f"{self._base_url}/nodeinfoget"
                     params = {"node": node_id}
                     # Use shorter timeout for faster scanning
-                    response = await self.session.get(url, params=params, timeout=5)
+                    response = await self.session.get(url, params=params, timeout=2)
 
                     if response.status == 200:
                         data = await response.json()
