@@ -7,13 +7,14 @@ from typing import Any
 
 import voluptuous as vol
 from aiohttp import ClientError
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import DucoConnectivityBoardApi
+from .api import detect_api_type
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,9 +33,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     session = async_get_clientsession(hass)
-    api = DucoConnectivityBoardApi(data[CONF_HOST], session)
 
     try:
+        # Detect which API type the device supports
+        api_class = await detect_api_type(data[CONF_HOST], session)
+        api = api_class(data[CONF_HOST], session)
         device_info = await api.async_get_device_info()
     except ClientError as err:
         raise CannotConnectError from err
@@ -47,6 +50,64 @@ class DucoBoxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._discovered_host: str | None = None
+        self._discovered_name: str | None = None
+
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        _LOGGER.debug("Zeroconf discovery info: %s", discovery_info)
+
+        # Get the IP address from discovery
+        host = discovery_info.host
+
+        # Get MAC address from properties if available
+        mac = discovery_info.properties.get("MAC", "").upper()
+
+        # Try to get device info to create unique ID
+        session = async_get_clientsession(self.hass)
+        try:
+            api_class = await detect_api_type(host, session)
+            api = api_class(host, session)
+            device_info = await api.async_get_device_info()
+
+            unique_id = device_info.serial_number
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+            self._discovered_host = host
+            self._discovered_name = device_info.model
+
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("Failed to connect to discovered device: %s", err)
+            return self.async_abort(reason="cannot_connect")
+
+        # Show confirmation form
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm discovery."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._discovered_name or "DucoBox",
+                data={CONF_HOST: self._discovered_host},
+            )
+
+        self._set_confirm_only()
+
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            description_placeholders={
+                "name": self._discovered_name or "DucoBox",
+                "host": self._discovered_host or "",
+            },
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -72,6 +133,8 @@ class DucoBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+
 
 
 class CannotConnectError(HomeAssistantError):

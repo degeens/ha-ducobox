@@ -27,6 +27,7 @@ class DucoBoxEntity(CoordinatorEntity[DucoBoxCoordinator]):
             name="DucoBox",
             model=device_info.model,
             sw_version=device_info.api_version,
+            serial_number=device_info.serial_number,
             connections=(
                 {(CONNECTION_NETWORK_MAC, device_info.mac_address)}
                 if device_info.mac_address

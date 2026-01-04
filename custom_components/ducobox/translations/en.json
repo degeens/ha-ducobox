@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect to discovered device"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -13,12 +14,97 @@
                     "host": "Host"
                 },
                 "data_description": {
-                    "host": "The hostname or IP address of your DucoBox Connectivity Board."
+                    "host": "The hostname or IP address of your DucoBox device (Connectivity Board or Communication Print)."
                 }
+            },
+            "zeroconf_confirm": {
+                "title": "Discovered DucoBox Device",
+                "description": "Do you want to add the {name} at {host} to Home Assistant?"
             }
         }
     },
     "entity": {
+        "number": {
+            "node_temp_offset": {
+                "name": "Temperature Offset"
+            },
+            "node_co2_setpoint": {
+                "name": "CO2 Setpoint"
+            },
+            "node_rh_setpoint": {
+                "name": "Humidity Setpoint"
+            },
+            "node_manual1": {
+                "name": "Manual Speed Level 1"
+            },
+            "node_manual2": {
+                "name": "Manual Speed Level 2"
+            },
+            "node_manual3": {
+                "name": "Manual Speed Level 3"
+            },
+            "node_manual_timeout": {
+                "name": "Manual Timeout"
+            },
+            "node_sensor_visu_level": {
+                "name": "Sensor Visualization Level"
+            },
+            "ducobox_auto_min": {
+                "name": "Auto Minimum Flow"
+            },
+            "ducobox_auto_max": {
+                "name": "Auto Maximum Flow"
+            },
+            "ducobox_capacity": {
+                "name": "Capacity"
+            },
+            "ducobox_manual1": {
+                "name": "Manual Speed Level 1"
+            },
+            "ducobox_manual2": {
+                "name": "Manual Speed Level 2"
+            },
+            "ducobox_manual3": {
+                "name": "Manual Speed Level 3"
+            },
+            "ducobox_manual_timeout": {
+                "name": "Manual Timeout"
+            },
+            "ducobox_comfort_temperature": {
+                "name": "Comfort Temperature"
+            },
+            "ducobox_calib_pin_max": {
+                "name": "Airflow Inlet Pressure Maximum"
+            },
+            "ducobox_calib_pout_max": {
+                "name": "Airflow Outlet Pressure Maximum"
+            },
+            "ducobox_calib_qout": {
+                "name": "Airflow Output Maximum"
+            },
+            "ducobox_program_mode_zone1": {
+                "name": "Program Mode Zone 1"
+            },
+            "ducobox_program_mode_zone2": {
+                "name": "Program Mode Zone 2"
+            }
+        },
+        "switch": {
+            "node_temp_dependent": {
+                "name": "Temperature Dependent"
+            },
+            "node_rh_delta": {
+                "name": "Humidity Delta"
+            },
+            "ducobox_bypass_adaptive": {
+                "name": "Bypass Adaptive"
+            }
+        },
+        "button": {
+            "ducobox_filter_reset": {
+                "name": "Reset Filter Timer"
+            }
+        },
         "fan": {
             "ventilation": {
                 "name": "Ventilation"
@@ -27,11 +113,19 @@
         "select": {
             "ventilation_state": {
                 "name": "Ventilation State"
+            },
+            "ducobox_bypass_mode": {
+                "name": "Bypass Mode",
+                "state": {
+                    "automatic": "Automatic",
+                    "closed": "Closed",
+                    "open": "Open"
+                }
             }
         },
         "sensor": {
             "flow_lvl_tgt": {
-                "name": "Target Flow Level"
+                "name": "Airflow Target Level"
             },
             "iaq_rh": {
                 "name": "Air Quality Index Relative Humidity"
@@ -40,7 +134,8 @@
                 "name": "Ventilation Mode",
                 "state": {
                     "auto": "Auto",
-                    "manu": "Manual"
+                    "manu": "Manual",
+                    "extn": "Override"
                 }
             },
             "rh": {
@@ -54,6 +149,51 @@
             },
             "time_state_remain": {
                 "name": "Ventilation State Remaining Time"
+            },
+            "temp_oda": {
+                "name": "Outdoor Temperature"
+            },
+            "temp_sup": {
+                "name": "Supply Temperature"
+            },
+            "temp_eta": {
+                "name": "Extract Temperature"
+            },
+            "temp_eha": {
+                "name": "Exhaust Temperature"
+            },
+            "bypass_status": {
+                "name": "Bypass Status"
+            },
+            "filter_remaining_time": {
+                "name": "Filter Remaining Time"
+            },
+            "supply_fan_speed": {
+                "name": "Supply Fan Speed"
+            },
+            "supply_fan_pwm": {
+                "name": "Supply Fan PWM"
+            },
+            "exhaust_fan_speed": {
+                "name": "Exhaust Fan Speed"
+            },
+            "exhaust_fan_pwm": {
+                "name": "Exhaust Fan PWM"
+            },
+            "node_temperature": {
+                "name": "Temperature"
+            },
+            "node_co2": {
+                "name": "CO2"
+            },
+            "node_rh": {
+                "name": "Relative Humidity"
+            },
+            "node_rssi": {
+                "name": "Signal Strength"
+            },
+            "node_cerr": {
+                "name": "Communication Errors"
             }
         }
     }
