@@ -8,12 +8,15 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "zeroconf_confirm": {
+                "description": "Do you want to add the DucoBox **{name}** ({host}) to Home Assistant?"
+            },
             "user": {
                 "data": {
                     "host": "Host"
                 },
                 "data_description": {
-                    "host": "The hostname or IP address of your DucoBox Connectivity Board."
+                    "host": "The hostname or IP address of your Duco Connectivity Board 2.0."
                 }
             }
         }
