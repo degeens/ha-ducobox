@@ -75,7 +75,14 @@ If you experience issues with other DucoBox models or local API versions, please
 
 ## Configuration
 
-### Adding the integration
+### Automatic discovery (recommended)
+
+1. Make sure your Duco Connectivity Board 2.0 is on the same network as your Home Assistant instance
+2. Go to **Settings** → **Devices & Services**
+3. A **DucoBox** entry will appear under **Discovered**
+4. Click **Add** and confirm
+
+### Manual setup
 
 1. Go to **Settings** → **Devices & Services**
 2. Click **+ Add Integration**
