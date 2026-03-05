@@ -89,3 +89,7 @@ If you experience issues with other DucoBox models or local API versions, please
 3. Search for **DucoBox**
 4. Enter the IP address or hostname of your DucoBox device
 5. Click **Submit**
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
