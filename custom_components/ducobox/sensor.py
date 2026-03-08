@@ -22,14 +22,14 @@ from . import DucoBoxConfigEntry
 from .const import DUCOBOX_VENTILATION_MODES
 from .coordinator import DucoBoxCoordinator
 from .entity import DucoBoxEntity
-from .models import DucoBoxData
+from .models import DucoBoxNode
 
 
 @dataclass(frozen=True, kw_only=True)
 class DucoBoxSensorEntityDescription(SensorEntityDescription):
     """Describes DucoBox sensor entity."""
 
-    value_fn: Callable[[DucoBoxData], StateType | datetime]
+    value_fn: Callable[[DucoBoxNode], StateType | datetime]
 
 
 SENSORS: tuple[DucoBoxSensorEntityDescription, ...] = (
@@ -76,22 +76,23 @@ SENSORS: tuple[DucoBoxSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.flow_lvl_tgt,
     ),
-    DucoBoxSensorEntityDescription(
-        key="rh",
-        translation_key="rh",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.HUMIDITY,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.rh,
-    ),
-    DucoBoxSensorEntityDescription(
-        key="iaq_rh",
-        translation_key="iaq_rh",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.HUMIDITY,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.iaq_rh,
-    ),
+    # TODO
+    # DucoBoxSensorEntityDescription(
+    #     key="rh",
+    #     translation_key="rh",
+    #     native_unit_of_measurement=PERCENTAGE,
+    #     device_class=SensorDeviceClass.HUMIDITY,
+    #     state_class=SensorStateClass.MEASUREMENT,
+    #     value_fn=lambda data: data.rh,
+    # ),
+    # DucoBoxSensorEntityDescription(
+    #     key="iaq_rh",
+    #     translation_key="iaq_rh",
+    #     native_unit_of_measurement=PERCENTAGE,
+    #     device_class=SensorDeviceClass.HUMIDITY,
+    #     state_class=SensorStateClass.MEASUREMENT,
+    #     value_fn=lambda data: data.iaq_rh,
+    # ),
 )
 
 

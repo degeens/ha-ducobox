@@ -2,11 +2,39 @@
 
 from __future__ import annotations
 
-from aiohttp import ClientError, ClientSession
+import logging
+from typing import Any
 
-from .models import DucoBoxData, DucoBoxDeviceInfo
+from aiohttp import ClientSession
 
-BOX_NODE_ID = 1  # Assuming node 1 is always the BOX node
+from .models import DucoBoxInfo, DucoBoxNode, DucoBsrhNode, DucoNode, DucoUcbatNode
+from .utils import format_box_model_name
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def _get_val(data: Any, *keys: str) -> Any:
+    """Get nested keys from a dict and return the Val field."""
+    for key in (*keys, "Val"):
+        if isinstance(data, dict):
+            data = data.get(key)
+        else:
+            return None
+    return data
+
+
+def _get_required_val(data: Any, *keys: str) -> Any:
+    """Get nested keys from a dict and return the Val field, raising on missing value."""
+    val = _get_val(data, *keys)
+    if val is None:
+        field = keys[-1]
+        msg = f"Failed to get {field}"
+        raise DucoConnectivityBoardApiError(msg)
+    return val
+
+
+class DucoConnectivityBoardApiError(Exception):
+    """Raised when the API returns unexpected data."""
 
 
 class DucoConnectivityBoardApi:
@@ -14,33 +42,32 @@ class DucoConnectivityBoardApi:
 
     def __init__(self, host: str, session: ClientSession) -> None:
         """
-        Initialize the API client.
+        Initialize the Duco Connectivity Board 2.0 API client.
 
         Args:
             host: The hostname or IP address of the Duco Connectivity Board 2.0.
-            session: The aiohttp ClientSession to use for requests.
+            session: The ClientSession to use for HTTP requests.
 
         """
-        self.host = host
         self._base_url = f"http://{host}"
-        self.session = session
+        self._session = session
 
-    async def async_get_device_info(self) -> DucoBoxDeviceInfo:
+    async def async_get_box_info(self) -> DucoBoxInfo:
         """
-        Get device information from the DucoBox device.
+        Get information about the DucoBox.
 
         Returns:
-            DucoBoxDeviceInfo: Object containing device information.
+            DucoBoxInfo: Object containing DucoBox information.
 
         Raises:
-            ClientError: If required data fields are missing from the response.
+            DucoConnectivityBoardApiError: If the API returns unexpected data.
             ClientResponseError: If the HTTP request fails.
 
         """
         url = f"{self._base_url}/info"
         params = {"parameter": "BoxName,PublicApiVersion,SerialDucoBox,Mac"}
 
-        response = await self.session.get(url, params=params)
+        response = await self._session.get(url, params=params)
         response.raise_for_status()
         data = await response.json()
 
@@ -48,124 +75,164 @@ class DucoConnectivityBoardApi:
         board = general.get("Board", {})
         lan = general.get("Lan", {})
 
-        model_name = board.get("BoxName", {}).get("Val")
-        if model_name is None:
-            msg = f"Failed to get BoxName from {url}"
-            raise ClientError(msg)
+        model_name = _get_required_val(board, "BoxName")
+        api_version = _get_required_val(board, "PublicApiVersion")
+        serial_number = _get_required_val(board, "SerialDucoBox")
+        mac_address = _get_required_val(lan, "Mac")
 
-        api_version = board.get("PublicApiVersion", {}).get("Val")
-        if api_version is None:
-            msg = f"Failed to get PublicApiVersion from {url}"
-            raise ClientError(msg)
-
-        serial_number = board.get("SerialDucoBox", {}).get("Val")
-        if serial_number is None:
-            msg = f"Failed to get SerialDucoBox from {url}"
-            raise ClientError(msg)
-
-        mac_address = lan.get("Mac", {}).get("Val")
-        if mac_address is None:
-            msg = f"Failed to get Mac from {url}"
-            raise ClientError(msg)
-
-        return DucoBoxDeviceInfo(
-            model=model_name.replace("_", " ").title(),
+        return DucoBoxInfo(
+            model=format_box_model_name(model_name),
             api_version=api_version,
             serial_number=serial_number,
             mac_address=mac_address,
         )
 
-    async def async_get_data(self) -> DucoBoxData:
+    async def async_get_nodes(self) -> list[DucoNode]:
         """
-        Fetch data from the DucoBox device.
+        Fetch all Duco nodes.
 
         Returns:
-            DucoBoxData: Object containing current device data.
+            list[DucoNode]: List of Duco nodes.
 
         Raises:
             ClientResponseError: If the HTTP request fails.
 
         """
-        url = f"{self._base_url}/info/nodes/{BOX_NODE_ID}"
-        params = {
-            "parameter": "State,TimeStateRemain,TimeStateEnd,Mode,FlowLvlTgt,Rh,IaqRh"
-        }
+        url = f"{self._base_url}/info/nodes"
 
-        response = await self.session.get(url, params=params)
+        response = await self._session.get(url)
         response.raise_for_status()
         data = await response.json()
 
-        ventilation = data.get("Ventilation", {})
-        sensor = data.get("Sensor", {})
+        nodes: list[DucoNode] = []
+        for node in data.get("Nodes", []):
+            node_id = node.get("Node")
+            general = node.get("General", {})
+            node_type = _get_required_val(general, "Type")
+            parent_node_id = _get_required_val(general, "Parent")
 
-        state = ventilation.get("State", {}).get("Val")
-        time_state_remain = ventilation.get("TimeStateRemain", {}).get("Val")
-        time_state_end = ventilation.get("TimeStateEnd", {}).get("Val")
-        mode = ventilation.get("Mode", {}).get("Val")
-        flow_lvl_tgt = ventilation.get("FlowLvlTgt", {}).get("Val")
-        rh = sensor.get("Rh", {}).get("Val")
-        iaq_rh = sensor.get("IaqRh", {}).get("Val")
+            duco_node: DucoNode
 
-        return DucoBoxData(
-            state=state,
-            time_state_remain=time_state_remain,
-            time_state_end=time_state_end,
-            mode=mode,
-            flow_lvl_tgt=flow_lvl_tgt,
-            rh=rh,
-            iaq_rh=iaq_rh,
-        )
+            match node_type:
+                case "BOX":
+                    ventilation = node.get("Ventilation", {})
 
-    async def async_get_ventilation_state_options(self) -> list[str]:
+                    state = _get_val(ventilation, "State")
+                    time_state_remain = _get_val(ventilation, "TimeStateRemain")
+                    time_state_end = _get_val(ventilation, "TimeStateEnd")
+                    mode = _get_val(ventilation, "Mode")
+                    flow_lvl_tgt = _get_val(ventilation, "FlowLvlTgt")
+
+                    duco_node = DucoBoxNode(
+                        node_id=node_id,
+                        node_type=node_type,
+                        parent_node_id=parent_node_id,
+                        state=state,
+                        time_state_remain=time_state_remain,
+                        time_state_end=time_state_end,
+                        mode=mode,
+                        flow_lvl_tgt=flow_lvl_tgt,
+                    )
+                case "BSRH":
+                    sensor = node.get("Sensor", {})
+
+                    rh = _get_val(sensor, "Rh")
+                    iaq_rh = _get_val(sensor, "IaqRh")
+
+                    duco_node = DucoBsrhNode(
+                        node_id=node_id,
+                        node_type=node_type,
+                        parent_node_id=parent_node_id,
+                        rh=rh,
+                        iaq_rh=iaq_rh,
+                    )
+                case "UCBAT":
+                    duco_node = DucoUcbatNode(
+                        node_id=node_id,
+                        node_type=node_type,
+                        parent_node_id=parent_node_id,
+                    )
+                case _:
+                    _LOGGER.warning(
+                        "Unknown node type '%s' for node %s, "
+                        "falling back to base DucoNode",
+                        node_type,
+                        node_id,
+                    )
+
+                    duco_node = DucoNode(
+                        node_id=node_id,
+                        node_type=node_type,
+                        parent_node_id=parent_node_id,
+                    )
+
+            nodes.append(duco_node)
+
+        return nodes
+
+    async def async_get_ventilation_state_options(self, node_id: int) -> list[str]:
         """
-        Get available ventilation state options from the DucoBox device.
+        Get ventilation state options for the Duco node.
+
+        Args:
+            node_id: The Duco node ID.
 
         Returns:
-            list[str]: List of available ventilation states.
+            list[str]: List of ventilation state options.
 
         Raises:
-            ClientError: If ventilation state options cannot be retrieved.
+            DucoConnectivityBoardApiError: If the API returns unexpected data.
             ClientResponseError: If the HTTP request fails.
 
         """
-        url = f"{self._base_url}/action/nodes/{BOX_NODE_ID}"
+        url = f"{self._base_url}/action/nodes/{node_id}"
         params = {"action": "SetVentilationState"}
 
-        response = await self.session.get(url, params=params)
+        response = await self._session.get(url, params=params)
         response.raise_for_status()
         data = await response.json()
+
+        msg = f"Failed to get ventilation state options from {url}"
 
         actions = data.get("Actions")
         if not isinstance(actions, list) or len(actions) == 0:
-            msg = f"Failed to get ventilation state options from {url}"
-            raise ClientError(msg)
+            raise DucoConnectivityBoardApiError(msg)
 
-        options = actions[0].get("Enum")
+        first_action = actions[0]
+        if not isinstance(first_action, dict):
+            raise DucoConnectivityBoardApiError(msg)
+
+        options = first_action.get("Enum")
         if not isinstance(options, list) or len(options) == 0:
-            msg = f"Failed to get ventilation state options from {url}"
-            raise ClientError(msg)
+            raise DucoConnectivityBoardApiError(msg)
 
         return options
 
-    async def async_set_ventilation_state(self, state: str) -> bool:
+    async def async_set_ventilation_state(self, node_id: int, state: str) -> bool:
         """
         Set the ventilation state on the DucoBox device.
 
         Args:
-            state: The desired ventilation state.
+            node_id: The Duco node ID.
+            state: The ventilation state.
 
         Returns:
-            bool: True if the ventilation state was set successfully, False otherwise.
+            bool: True if the ventilation state was set successfully, false otherwise.
 
         Raises:
             ClientResponseError: If the HTTP request fails.
 
         """
-        url = f"{self._base_url}/action/nodes/{BOX_NODE_ID}"
+        url = f"{self._base_url}/action/nodes/{node_id}"
         payload = {"Action": "SetVentilationState", "Val": state}
 
-        response = await self.session.post(url, json=payload)
+        response = await self._session.post(url, json=payload)
         response.raise_for_status()
         result = await response.json()
 
-        return result.get("Result") == "SUCCESS"
+        success = result.get("Result") == "SUCCESS"
+
+        if not success:
+            _LOGGER.warning("Action SetVentilationState for node %s failed", node_id)
+
+        return success
