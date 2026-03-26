@@ -45,3 +45,11 @@ class DucoBsrhNode(DucoNode):
 @dataclass
 class DucoUcbatNode(DucoNode):
     """A Duco UCBAT (A battery-powered user control) node."""
+
+
+@dataclass
+class DucoUcco2Node(DucoNode):
+    """A Duco UCCO2 node."""
+
+    co2: int | None = None
+    iaq_co2: int | None = None

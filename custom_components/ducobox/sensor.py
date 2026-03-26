@@ -14,17 +14,22 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTime
+from homeassistant.const import CONCENTRATION_PARTS_PER_MILLION, PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import UTC
 
 from . import DucoBoxConfigEntry
-from .const import DUCOBOX_VENTILATION_MODES
+from .const import (
+    DUCOBOX_NODE_TYPE_BOX,
+    DUCOBOX_NODE_TYPE_BSRH,
+    DUCOBOX_NODE_TYPE_UCCO2,
+    DUCOBOX_VENTILATION_MODES,
+)
 from .coordinator import DucoBoxCoordinator
 from .entity import DucoBoxEntity
-from .models import DucoBoxNode, DucoBsrhNode, DucoNode
+from .models import DucoBoxNode, DucoBsrhNode, DucoNode, DucoUcco2Node
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -35,7 +40,7 @@ class DucoBoxSensorEntityDescription(SensorEntityDescription):
 
 
 SENSORS_BY_NODE_TYPE: dict[str, list[DucoBoxSensorEntityDescription]] = {
-    "BOX": [
+    DUCOBOX_NODE_TYPE_BOX: [
         DucoBoxSensorEntityDescription(
             key="time_state_remain",
             translation_key="time_state_remain",
@@ -81,7 +86,7 @@ SENSORS_BY_NODE_TYPE: dict[str, list[DucoBoxSensorEntityDescription]] = {
             value_fn=lambda data: cast("DucoBoxNode", data).flow_lvl_tgt,
         ),
     ],
-    "BSRH": [
+    DUCOBOX_NODE_TYPE_BSRH: [
         DucoBoxSensorEntityDescription(
             key="rh",
             translation_key="rh",
@@ -97,6 +102,24 @@ SENSORS_BY_NODE_TYPE: dict[str, list[DucoBoxSensorEntityDescription]] = {
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda data: cast("DucoBsrhNode", data).iaq_rh,
+        ),
+    ],
+    DUCOBOX_NODE_TYPE_UCCO2: [
+        DucoBoxSensorEntityDescription(
+            key="co2",
+            translation_key="co2",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            device_class=SensorDeviceClass.CO2,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: cast("DucoUcco2Node", data).co2,
+        ),
+        DucoBoxSensorEntityDescription(
+            key="iaq_co2",
+            translation_key="iaq_co2",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=SensorDeviceClass.CO2,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: cast("DucoUcco2Node", data).iaq_co2,
         ),
     ],
 }

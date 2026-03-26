@@ -7,7 +7,14 @@ from typing import Any
 
 from aiohttp import ClientSession
 
-from .models import DucoBoxInfo, DucoBoxNode, DucoBsrhNode, DucoNode, DucoUcbatNode
+from .models import (
+    DucoBoxInfo,
+    DucoBoxNode,
+    DucoBsrhNode,
+    DucoNode,
+    DucoUcbatNode,
+    DucoUcco2Node,
+)
 from .utils import format_box_model_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -150,6 +157,19 @@ class DucoConnectivityBoardApi:
                         node_id=node_id,
                         node_type=node_type,
                         parent_node_id=parent_node_id,
+                    )
+                case "UCCO2":
+                    sensor = node.get("Sensor", {})
+
+                    co2 = _get_val(sensor, "Co2")
+                    iaq_co2 = _get_val(sensor, "IaqCo2")
+
+                    duco_node = DucoUcco2Node(
+                        node_id=node_id,
+                        node_type=node_type,
+                        parent_node_id=parent_node_id,
+                        co2=co2,
+                        iaq_co2=iaq_co2,
                     )
                 case _:
                     _LOGGER.warning(
