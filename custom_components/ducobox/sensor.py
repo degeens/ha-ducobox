@@ -1,10 +1,12 @@
-"""Sensor platform for DucoBox."""
+"""Sensor entities for the DucoBox integration."""
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,78 +24,82 @@ from . import DucoBoxConfigEntry
 from .const import DUCOBOX_VENTILATION_MODES
 from .coordinator import DucoBoxCoordinator
 from .entity import DucoBoxEntity
-from .models import DucoBoxNode
+from .models import DucoBoxNode, DucoBsrhNode, DucoNode
 
 
 @dataclass(frozen=True, kw_only=True)
 class DucoBoxSensorEntityDescription(SensorEntityDescription):
-    """Describes DucoBox sensor entity."""
+    """Describes a DucoBox sensor entity."""
 
-    value_fn: Callable[[DucoBoxNode], StateType | datetime]
+    value_fn: Callable[[DucoNode], StateType | datetime]
 
 
-SENSORS: tuple[DucoBoxSensorEntityDescription, ...] = (
-    DucoBoxSensorEntityDescription(
-        key="time_state_remain",
-        translation_key="time_state_remain",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        device_class=SensorDeviceClass.DURATION,
-        suggested_display_precision=0,
-        value_fn=lambda data: (
-            data.time_state_remain
-            if data.time_state_remain and data.time_state_remain > 0
-            else None
+SENSORS_BY_NODE_TYPE: dict[str, list[DucoBoxSensorEntityDescription]] = {
+    "BOX": [
+        DucoBoxSensorEntityDescription(
+            key="time_state_remain",
+            translation_key="time_state_remain",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            device_class=SensorDeviceClass.DURATION,
+            suggested_display_precision=0,
+            value_fn=lambda data: (
+                value
+                if (value := cast("DucoBoxNode", data).time_state_remain) is not None
+                and value > 0
+                else None
+            ),
         ),
-    ),
-    DucoBoxSensorEntityDescription(
-        key="time_state_end",
-        translation_key="time_state_end",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: (
-            datetime.fromtimestamp(data.time_state_end, tz=UTC)
-            if data.time_state_end and data.time_state_end > 0
-            else None
+        DucoBoxSensorEntityDescription(
+            key="time_state_end",
+            translation_key="time_state_end",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            value_fn=lambda data: (
+                datetime.fromtimestamp(value, tz=UTC)
+                if (value := cast("DucoBoxNode", data).time_state_end) is not None
+                and value > 0
+                else None
+            ),
         ),
-    ),
-    DucoBoxSensorEntityDescription(
-        key="mode",
-        translation_key="mode",
-        device_class=SensorDeviceClass.ENUM,
-        options=DUCOBOX_VENTILATION_MODES,
-        value_fn=lambda data: data.mode,
-    ),
-    DucoBoxSensorEntityDescription(
-        key="state",
-        translation_key="state",
-        device_class=SensorDeviceClass.ENUM,
-        options=[],  # Will be set dynamically from coordinator
-        value_fn=lambda data: data.state,
-    ),
-    DucoBoxSensorEntityDescription(
-        key="flow_lvl_tgt",
-        translation_key="flow_lvl_tgt",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.flow_lvl_tgt,
-    ),
-    # TODO
-    # DucoBoxSensorEntityDescription(
-    #     key="rh",
-    #     translation_key="rh",
-    #     native_unit_of_measurement=PERCENTAGE,
-    #     device_class=SensorDeviceClass.HUMIDITY,
-    #     state_class=SensorStateClass.MEASUREMENT,
-    #     value_fn=lambda data: data.rh,
-    # ),
-    # DucoBoxSensorEntityDescription(
-    #     key="iaq_rh",
-    #     translation_key="iaq_rh",
-    #     native_unit_of_measurement=PERCENTAGE,
-    #     device_class=SensorDeviceClass.HUMIDITY,
-    #     state_class=SensorStateClass.MEASUREMENT,
-    #     value_fn=lambda data: data.iaq_rh,
-    # ),
-)
+        DucoBoxSensorEntityDescription(
+            key="mode",
+            translation_key="mode",
+            device_class=SensorDeviceClass.ENUM,
+            options=DUCOBOX_VENTILATION_MODES,
+            value_fn=lambda data: cast("DucoBoxNode", data).mode,
+        ),
+        DucoBoxSensorEntityDescription(
+            key="state",
+            translation_key="state",
+            device_class=SensorDeviceClass.ENUM,
+            value_fn=lambda data: cast("DucoBoxNode", data).state,
+        ),
+        DucoBoxSensorEntityDescription(
+            key="flow_lvl_tgt",
+            translation_key="flow_lvl_tgt",
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: cast("DucoBoxNode", data).flow_lvl_tgt,
+        ),
+    ],
+    "BSRH": [
+        DucoBoxSensorEntityDescription(
+            key="rh",
+            translation_key="rh",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: cast("DucoBsrhNode", data).rh,
+        ),
+        DucoBoxSensorEntityDescription(
+            key="iaq_rh",
+            translation_key="iaq_rh",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: cast("DucoBsrhNode", data).iaq_rh,
+        ),
+    ],
+}
 
 
 async def async_setup_entry(
@@ -101,38 +107,36 @@ async def async_setup_entry(
     entry: DucoBoxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up DucoBox sensor based on a config entry."""
-    coordinator = entry.runtime_data
+    """Set up Duco sensors."""
+    coordinator = entry.runtime_data.coordinator
 
     async_add_entities(
-        DucoBoxSensor(coordinator, description) for description in SENSORS
+        DucoBoxSensorEntity(coordinator, node, sensor_description)
+        for node in coordinator.data.values()
+        for sensor_description in SENSORS_BY_NODE_TYPE.get(node.node_type, [])
     )
 
 
-class DucoBoxSensor(DucoBoxEntity, SensorEntity):
-    """Defines a DucoBox sensor."""
+class DucoBoxSensorEntity(DucoBoxEntity, SensorEntity):
+    """DucoBox sensor entity."""
 
     entity_description: DucoBoxSensorEntityDescription
 
     def __init__(
         self,
         coordinator: DucoBoxCoordinator,
-        description: DucoBoxSensorEntityDescription,
+        node: DucoNode,
+        sensor_description: DucoBoxSensorEntityDescription,
     ) -> None:
-        """Initialize DucoBox sensor."""
-        super().__init__(coordinator)
+        """Initialize DucoBox sensor entity."""
+        super().__init__(coordinator, node)
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
-        self.entity_description = description
+        self._node_id = node.node_id
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{node.node_id}_{sensor_description.key}"
+        self.entity_description = sensor_description
 
     @property
     def native_value(self) -> StateType | datetime:
-        """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
-
-    @property
-    def options(self) -> list[str] | None:
-        """Return the list of available options for enum sensors."""
-        if self.entity_description.key == "state":
-            return self.coordinator.ventilation_state_options
-        return self.entity_description.options
+        """Return the value reported by the DucoBox sensor."""
+        node = self.coordinator.data[self._node_id]
+        return self.entity_description.value_fn(node)

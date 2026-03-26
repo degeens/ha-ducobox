@@ -1,4 +1,4 @@
-"""Data models for DucoBox."""
+"""Data models for the DucoBox integration."""
 
 from __future__ import annotations
 
@@ -10,7 +10,6 @@ class DucoBoxInfo:
     """Information about the DucoBox."""
 
     model: str
-    api_version: str
     serial_number: str
     mac_address: str
 

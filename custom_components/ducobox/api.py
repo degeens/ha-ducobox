@@ -1,4 +1,4 @@
-"""API client for Duco Connectivity Board 2.0."""
+"""API client for the Duco Connectivity Board 2.0."""
 
 from __future__ import annotations
 
@@ -65,7 +65,7 @@ class DucoConnectivityBoardApi:
 
         """
         url = f"{self._base_url}/info"
-        params = {"parameter": "BoxName,PublicApiVersion,SerialDucoBox,Mac"}
+        params = {"parameter": "BoxName,SerialDucoBox,Mac"}
 
         response = await self._session.get(url, params=params)
         response.raise_for_status()
@@ -76,13 +76,11 @@ class DucoConnectivityBoardApi:
         lan = general.get("Lan", {})
 
         model_name = _get_required_val(board, "BoxName")
-        api_version = _get_required_val(board, "PublicApiVersion")
         serial_number = _get_required_val(board, "SerialDucoBox")
         mac_address = _get_required_val(lan, "Mac")
 
         return DucoBoxInfo(
             model=format_box_model_name(model_name),
-            api_version=api_version,
             serial_number=serial_number,
             mac_address=mac_address,
         )
@@ -105,6 +103,7 @@ class DucoConnectivityBoardApi:
         data = await response.json()
 
         nodes: list[DucoNode] = []
+
         for node in data.get("Nodes", []):
             node_id = node.get("Node")
             general = node.get("General", {})
@@ -170,43 +169,46 @@ class DucoConnectivityBoardApi:
 
         return nodes
 
-    async def async_get_ventilation_state_options(self, node_id: int) -> list[str]:
+    async def async_get_ventilation_state_options(self) -> dict[int, list[str]]:
         """
-        Get ventilation state options for the Duco node.
-
-        Args:
-            node_id: The Duco node ID.
+        Get ventilation state options for all Duco nodes.
 
         Returns:
-            list[str]: List of ventilation state options.
+            dict[int, list[str]]: Mapping of node ID to list of ventilation state options.
 
         Raises:
-            DucoConnectivityBoardApiError: If the API returns unexpected data.
             ClientResponseError: If the HTTP request fails.
 
         """
-        url = f"{self._base_url}/action/nodes/{node_id}"
+        url = f"{self._base_url}/action/nodes"
         params = {"action": "SetVentilationState"}
 
         response = await self._session.get(url, params=params)
         response.raise_for_status()
         data = await response.json()
 
-        msg = f"Failed to get ventilation state options from {url}"
+        ventilation_state_options: dict[int, list[str]] = {}
 
-        actions = data.get("Actions")
-        if not isinstance(actions, list) or len(actions) == 0:
-            raise DucoConnectivityBoardApiError(msg)
+        for node in data.get("Nodes", []):
+            node_id = node.get("Node")
+            if node_id is None:
+                continue
 
-        first_action = actions[0]
-        if not isinstance(first_action, dict):
-            raise DucoConnectivityBoardApiError(msg)
+            actions = node.get("Actions")
+            if not isinstance(actions, list) or len(actions) == 0:
+                continue
 
-        options = first_action.get("Enum")
-        if not isinstance(options, list) or len(options) == 0:
-            raise DucoConnectivityBoardApiError(msg)
+            first_action = actions[0]
+            if not isinstance(first_action, dict):
+                continue
 
-        return options
+            options = first_action.get("Enum")
+            if not isinstance(options, list) or len(options) == 0:
+                continue
+
+            ventilation_state_options[node_id] = options
+
+        return ventilation_state_options
 
     async def async_set_ventilation_state(self, node_id: int, state: str) -> bool:
         """

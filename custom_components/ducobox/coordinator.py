@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for DucoBox."""
+"""Coordinators for the DucoBox integration."""
 
 from __future__ import annotations
 
@@ -6,26 +6,37 @@ import logging
 from datetime import timedelta
 
 from aiohttp import ClientError
+from attr import dataclass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import DucoConnectivityBoardApi
-from .const import DOMAIN
-from .models import DucoBoxInfo, DucoBoxNode
+from .models import DucoBoxInfo, DucoNode
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=30)
+UPDATE_INTERVAL = timedelta(seconds=30)
+OPTIONS_UPDATE_INTERVAL = timedelta(hours=1)
 
 
-class DucoBoxCoordinator(DataUpdateCoordinator[DucoBoxNode]):
+@dataclass
+class DucoBoxRuntimeData:
+    """DucoBox runtime data."""
+
+    coordinator: DucoBoxCoordinator
+    options_coordinator: DucoBoxOptionsCoordinator
+
+
+type DucoBoxConfigEntry = ConfigEntry[DucoBoxRuntimeData]
+
+
+class DucoBoxCoordinator(DataUpdateCoordinator[dict[int, DucoNode]]):
     """Class to manage fetching DucoBox data."""
 
     config_entry: ConfigEntry
-    device_info: DucoBoxInfo
-    ventilation_state_options: list[str]
+    box_info: DucoBoxInfo
 
     def __init__(
         self,
@@ -37,8 +48,8 @@ class DucoBoxCoordinator(DataUpdateCoordinator[DucoBoxNode]):
         super().__init__(
             hass,
             logger=_LOGGER,
-            name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            name="Duco coordinator",
+            update_interval=UPDATE_INTERVAL,
             config_entry=config_entry,
             always_update=False,
         )
@@ -48,15 +59,12 @@ class DucoBoxCoordinator(DataUpdateCoordinator[DucoBoxNode]):
     async def async_setup(self) -> None:
         """Set up the coordinator."""
         try:
-            self.device_info = await self.api.async_get_box_info()
-            self.ventilation_state_options = (
-                await self.api.async_get_ventilation_state_options(1)
-            )
+            self.box_info = await self.api.async_get_box_info()
         except ClientError as err:
             msg = f"Failed to setup coordinator: {err}"
             raise UpdateFailed(msg) from err
 
-    async def _async_update_data(self) -> DucoBoxNode:
+    async def _async_update_data(self) -> dict[int, DucoNode]:
         """Update the data."""
         try:
             nodes = await self.api.async_get_nodes()
@@ -64,22 +72,46 @@ class DucoBoxCoordinator(DataUpdateCoordinator[DucoBoxNode]):
             msg = f"Failed to update coordinator data: {err}"
             raise UpdateFailed(msg) from err
 
-        box_node = next((node for node in nodes if isinstance(node, DucoBoxNode)), None)
-        if box_node is None:
-            msg = "No BOX node found in DucoBox nodes"
-            raise UpdateFailed(msg)
+        return {node.node_id: node for node in nodes}
 
-        return box_node
-
-    async def async_set_ventilation_state(self, state: str) -> None:
+    async def async_set_ventilation_state(self, node_id: int, state: str) -> None:
         """Set the ventilation state."""
         try:
-            success = await self.api.async_set_ventilation_state(1, state)
+            success = await self.api.async_set_ventilation_state(node_id, state)
             if not success:
-                msg = f"Failed to set ventilation state to {state}"
+                msg = f"Failed to set ventilation state on node {node_id} to {state}"
                 raise HomeAssistantError(msg)
 
             await self.async_request_refresh()
         except ClientError as err:
-            msg = f"Failed to set ventilation state to {state}: {err}"
+            msg = f"Failed to set ventilation state on node {node_id} to {state}: {err}"
             raise HomeAssistantError(msg) from err
+
+
+class DucoBoxOptionsCoordinator(DataUpdateCoordinator[dict[int, list[str]]]):
+    """Class to manage fetching DucoBox ventilation state options."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        api: DucoConnectivityBoardApi,
+    ) -> None:
+        """Initialize coordinator."""
+        super().__init__(
+            hass,
+            logger=_LOGGER,
+            name="Duco options coordinator",
+            update_interval=OPTIONS_UPDATE_INTERVAL,
+            config_entry=config_entry,
+            always_update=False,
+        )
+        self.api = api
+
+    async def _async_update_data(self) -> dict[int, list[str]]:
+        """Update the data."""
+        try:
+            return await self.api.async_get_ventilation_state_options()
+        except ClientError as err:
+            msg = f"Failed to get ventilation state options: {err}"
+            raise UpdateFailed(msg) from err

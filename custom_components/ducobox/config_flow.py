@@ -100,7 +100,7 @@ class DucoBoxConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
                 return self.async_create_entry(
-                    title=device_info.model, data={CONF_HOST: host}
+                    title=f"DucoBox {device_info.model}", data={CONF_HOST: host}
                 )
 
         return self.async_show_form(

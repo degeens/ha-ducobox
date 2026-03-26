@@ -1,4 +1,4 @@
-"""Utility functions for the Duco integration."""
+"""Utility functions for the DucoBox integration."""
 
 
 def format_box_model_name(model_name: str) -> str:

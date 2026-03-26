@@ -1,14 +1,43 @@
-"""Select platform for DucoBox."""
+"""Select entities for the DucoBox integration."""
 
 from __future__ import annotations
 
-from homeassistant.components.select import SelectEntity
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from typing import cast
+
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DucoBoxConfigEntry
-from .coordinator import DucoBoxCoordinator
+from .coordinator import DucoBoxCoordinator, DucoBoxOptionsCoordinator
 from .entity import DucoBoxEntity
+from .models import DucoBoxNode, DucoNode
+
+
+@dataclass(frozen=True, kw_only=True)
+class DucoBoxSelectEntityDescription(SelectEntityDescription):
+    """Describes a DucoBox select entity."""
+
+    value_fn: Callable[[DucoNode], str | None]
+    options_fn: Callable[[DucoBoxOptionsCoordinator, int], list[str]]
+    select_fn: Callable[[DucoBoxCoordinator, int, str], Awaitable[None]]
+
+
+SELECTS_BY_NODE_TYPE: dict[str, list[DucoBoxSelectEntityDescription]] = {
+    "BOX": [
+        DucoBoxSelectEntityDescription(
+            key="ventilation_state",
+            translation_key="ventilation_state",
+            value_fn=lambda data: cast("DucoBoxNode", data).state,
+            options_fn=lambda coordinator, node_id: coordinator.data.get(node_id, []),
+            select_fn=lambda coordinator, node_id, option: (
+                coordinator.async_set_ventilation_state(node_id, option)
+            ),
+        ),
+    ],
+}
 
 
 async def async_setup_entry(
@@ -16,32 +45,50 @@ async def async_setup_entry(
     entry: DucoBoxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up DucoBox select based on a config entry."""
-    coordinator = entry.runtime_data
+    """Set up Duco selects."""
+    coordinator = entry.runtime_data.coordinator
+    options_coordinator = entry.runtime_data.options_coordinator
 
-    async_add_entities([DucoBoxVentilationStateSelect(coordinator)])
+    async_add_entities(
+        DucoBoxSelectEntity(coordinator, options_coordinator, node, select_description)
+        for node in coordinator.data.values()
+        for select_description in SELECTS_BY_NODE_TYPE.get(node.node_type, [])
+    )
 
 
-class DucoBoxVentilationStateSelect(DucoBoxEntity, SelectEntity):
-    """Defines a DucoBox ventilation state select entity."""
+class DucoBoxSelectEntity(DucoBoxEntity, SelectEntity):
+    """DucoBox select entity."""
 
-    _attr_translation_key = "ventilation_state"
+    entity_description: DucoBoxSelectEntityDescription
 
     def __init__(
         self,
         coordinator: DucoBoxCoordinator,
+        options_coordinator: DucoBoxOptionsCoordinator,
+        node: DucoNode,
+        select_description: DucoBoxSelectEntityDescription,
     ) -> None:
-        """Initialize DucoBox ventilation state select."""
-        super().__init__(coordinator)
+        """Initialize DucoBox select entity."""
+        super().__init__(coordinator, node)
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_ventilation_state"
-        self._attr_options = coordinator.ventilation_state_options
+        self._node_id = node.node_id
+        self._options_coordinator = options_coordinator
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{node.node_id}_{select_description.key}"
+        self.entity_description = select_description
+
+    @property
+    def options(self) -> list[str]:
+        """Return a set of selectable options."""
+        return self.entity_description.options_fn(
+            self._options_coordinator, self._node_id
+        )
 
     @property
     def current_option(self) -> str | None:
-        """Return the current selected option."""
-        return self.coordinator.data.state
+        """Return the selected option."""
+        node = self.coordinator.data[self._node_id]
+        return self.entity_description.value_fn(node)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.coordinator.async_set_ventilation_state(option)
+        await self.entity_description.select_fn(self.coordinator, self._node_id, option)
