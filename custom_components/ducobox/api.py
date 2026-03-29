@@ -150,7 +150,8 @@ class DucoConnectivityBoardApi:
         Get ventilation state options for all Duco nodes.
 
         Returns:
-            dict[int, list[str]]: Mapping of node ID to list of ventilation state options.
+            dict[int, list[str]]: Mapping of node ID to list of ventilation
+            state options.
 
         Raises:
             ClientResponseError: If the HTTP request fails.

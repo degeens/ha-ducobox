@@ -169,7 +169,10 @@ class DucoBoxSensorEntity(DucoBoxEntity, SensorEntity):
 
         self._node_id = node.node_id
         self._options_coordinator = options_coordinator
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{node.node_id}_{sensor_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{node.node_id}_"
+            f"{sensor_description.key}"
+        )
         self.entity_description = sensor_description
 
     @property
