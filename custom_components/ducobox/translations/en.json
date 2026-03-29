@@ -10,7 +10,7 @@
         "step": {
             "zeroconf_confirm": {
                 "title": "Discovered Duco Connectivity Board 2.0",
-                "description": "Do you want to add DucoBox **{name}** ({host}) to Home Assistant?"
+                "description": "Do you want to add **DucoBox {name}** ({host}) to Home Assistant?"
             },
             "user": {
                 "data": {
