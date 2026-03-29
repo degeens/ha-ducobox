@@ -14,7 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import DucoConnectivityBoardApi
 from .const import DOMAIN
-from .models import DucoBoxDeviceInfo
+from .models import DucoBoxInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,14 +100,14 @@ class DucoBoxConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
                 return self.async_create_entry(
-                    title=device_info.model, data={CONF_HOST: host}
+                    title=f"DucoBox {device_info.model}", data={CONF_HOST: host}
                 )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def _async_get_device_info(self, host: str) -> DucoBoxDeviceInfo:
+    async def _async_get_device_info(self, host: str) -> DucoBoxInfo:
         session = async_get_clientsession(self.hass)
         api = DucoConnectivityBoardApi(host, session)
-        return await api.async_get_device_info()
+        return await api.async_get_box_info()

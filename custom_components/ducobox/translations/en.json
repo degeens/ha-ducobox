@@ -34,11 +34,17 @@
             }
         },
         "sensor": {
+            "co2": {
+                "name": "CO2"
+            },
             "flow_lvl_tgt": {
                 "name": "Target Flow Level"
             },
+            "iaq_co2": {
+                "name": "CO2 Air Quality Index"
+            },
             "iaq_rh": {
-                "name": "Air Quality Index Relative Humidity"
+                "name": "Relative Humidity Air Quality Index"
             },
             "mode": {
                 "name": "Ventilation Mode",
