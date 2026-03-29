@@ -8,38 +8,33 @@ A Home Assistant integration for DucoBox ventilation systems using the Connectiv
 
 ## Features
 
-This integration enables controlling and monitoring DucoBox ventilation systems.
+This integration enables controlling and monitoring DucoBox ventilation systems. All nodes connected through the Connectivity Board are automatically discovered and each node is represented as a separate device in Home Assistant.
 
-### Fan entities
+The following table lists all supported entities per node type:
 
-- **Ventilation**: Select ventilation state using preset mode
+| Entity | Type | BOX | BSRH | UCCO2 | VLV | VLVCO2 | VLVRH |
+|---|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| Ventilation | Fan | ✓ | | | ✓ | ✓ | ✓ |
+| Ventilation State | Select | ✓ | | | ✓ | ✓ | ✓ |
+| Ventilation Mode | Sensor | ✓ | | | ✓ | ✓ | ✓ |
+| Ventilation State | Sensor | ✓ | | | ✓ | ✓ | ✓ |
+| Ventilation State End Time | Sensor | ✓ | | | ✓ | ✓ | ✓ |
+| Ventilation State Remaining Time | Sensor | ✓ | | | ✓ | ✓ | ✓ |
+| Target Flow Level | Sensor | ✓ | | | ✓ | ✓ | ✓ |
+| Relative Humidity | Sensor | | ✓ | | | | ✓ |
+| Air Quality Index (Relative Humidity) | Sensor | | ✓ | | | | ✓ |
+| CO₂ | Sensor | | | ✓ | | ✓ | |
+| Air Quality Index (CO₂) | Sensor | | | ✓ | | ✓ | |
 
-### Select entities
-
-- **Ventilation State**: Select ventilation state
-
-### Sensor entities
-
-- **Relative Humidity**: Current relative humidity (%)
-- **Air Quality Index Relative Humidity**: An indication of the current air quality based on relative humidity (%)
-- **Target Flow Level**: Current target flow level (%)
-- **Ventilation Mode**: Current ventilation mode (`AUTO` or `MANU`)
-- **Ventilation State**: Current ventilation state
-- **Ventilation State End Time**: Timestamp when current ventilation state will end (or `Unknown` when never ending)
-- **Ventilation State Remaining Time**: Remaining time in current ventilation state in seconds (or `Unknown` when never ending)
+If you are missing a node type or entity, or if something is not working correctly, please [create a GitHub issue](https://github.com/degeens/ha-ducobox/issues/new).
 
 ## Requirements
 
 - Home Assistant 2025.10.1 or newer
 - A DucoBox ventilation system with Duco Connectivity Board 2.0 installed
-- Local network access to your Duco Connectivity Board 2.0
+- Network access to your Duco Connectivity Board 2.0
 
 ## Compatibility
-
-### Tested configuration
-This integration has been tested and verified to work with:
-- DucoBox Silent Connect
-- Duco Connectivity Board 2.0 (API version 2.5)
 
 ### Supported models
 
@@ -51,7 +46,12 @@ This integration should work with all DucoBox models compatible with the Connect
 - DucoBox Energy Sky
 - DucoBox Energy Premium
 
-If you experience issues with other DucoBox models or local API versions, please [create a GitHub issue](https://github.com/degeens/ha-ducobox/issues/new).
+### Tested configuration
+
+This integration is continuously tested and verified to work by the maintainer with:
+
+- DucoBox Silent Connect
+- Duco Connectivity Board 2.0 (API version 2.5)
 
 ## Installation
 
