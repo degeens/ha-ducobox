@@ -6,13 +6,13 @@ import logging
 from datetime import timedelta
 
 from aiohttp import ClientError
-from attr import dataclass
+from dataclasses import dataclass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import DucoConnectivityBoardApi
+from .api import DucoConnectivityBoardApi, DucoConnectivityBoardApiError
 from .models import DucoBoxInfo, DucoBoxNode
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ class DucoBoxCoordinator(DataUpdateCoordinator[dict[int, DucoBoxNode]]):
         """Set up the coordinator."""
         try:
             self.box_info = await self.api.async_get_box_info()
-        except ClientError as err:
+        except (ClientError, DucoConnectivityBoardApiError) as err:
             msg = f"Failed to setup coordinator: {err}"
             raise UpdateFailed(msg) from err
 
@@ -68,7 +68,7 @@ class DucoBoxCoordinator(DataUpdateCoordinator[dict[int, DucoBoxNode]]):
         """Update the data."""
         try:
             nodes = await self.api.async_get_nodes()
-        except ClientError as err:
+        except (ClientError, DucoConnectivityBoardApiError) as err:
             msg = f"Failed to update coordinator data: {err}"
             raise UpdateFailed(msg) from err
 
@@ -112,6 +112,6 @@ class DucoBoxOptionsCoordinator(DataUpdateCoordinator[dict[int, list[str]]]):
         """Update the data."""
         try:
             return await self.api.async_get_ventilation_state_options()
-        except ClientError as err:
+        except (ClientError, DucoConnectivityBoardApiError) as err:
             msg = f"Failed to get ventilation state options: {err}"
             raise UpdateFailed(msg) from err

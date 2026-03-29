@@ -19,6 +19,7 @@ class DucoBoxEntity(CoordinatorEntity[DucoBoxCoordinator]):
     def __init__(self, coordinator: DucoBoxCoordinator, node: DucoBoxNode) -> None:
         """Initialize DucoBox entity."""
         super().__init__(coordinator)
+        self._node_id = node.node_id
 
         box_info = coordinator.box_info
 
@@ -27,12 +28,22 @@ class DucoBoxEntity(CoordinatorEntity[DucoBoxCoordinator]):
             manufacturer="Duco",
             name=f"{node.node_type} {node.node_id}",
             model=node.node_type,
-            via_device=(DOMAIN, f"{box_info.serial_number}_{node.parent_node_id}"),
             configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
         )
+
+        if node.node_type != DUCOBOX_NODE_TYPE_BOX:
+            self._attr_device_info["via_device"] = (
+                DOMAIN,
+                f"{box_info.serial_number}_{node.parent_node_id}",
+            )
 
         if node.node_type == DUCOBOX_NODE_TYPE_BOX:
             self._attr_device_info["serial_number"] = box_info.serial_number
             self._attr_device_info["connections"] = {
                 (CONNECTION_NETWORK_MAC, box_info.mac_address)
             }
+
+    @property
+    def available(self) -> bool:
+        """Return True if the node is still present in coordinator data."""
+        return super().available and self._node_id in self.coordinator.data

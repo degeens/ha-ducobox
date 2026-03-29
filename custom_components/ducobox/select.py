@@ -10,6 +10,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DucoBoxConfigEntry
+from .const import (
+    DUCOBOX_NODE_TYPE_BOX,
+    DUCOBOX_NODE_TYPE_VLV,
+    DUCOBOX_NODE_TYPE_VLVCO2,
+    DUCOBOX_NODE_TYPE_VLVRH,
+)
 from .coordinator import DucoBoxCoordinator, DucoBoxOptionsCoordinator
 from .entity import DucoBoxEntity
 from .models import DucoBoxNode
@@ -35,10 +41,10 @@ VENTILATION_STATE = DucoBoxSelectEntityDescription(
 )
 
 SELECTS_BY_NODE_TYPE: dict[str, list[DucoBoxSelectEntityDescription]] = {
-    "BOX": [VENTILATION_STATE],
-    "VLV": [VENTILATION_STATE],
-    "VLVCO2": [VENTILATION_STATE],
-    "VLVRH": [VENTILATION_STATE],
+    DUCOBOX_NODE_TYPE_BOX: [VENTILATION_STATE],
+    DUCOBOX_NODE_TYPE_VLV: [VENTILATION_STATE],
+    DUCOBOX_NODE_TYPE_VLVCO2: [VENTILATION_STATE],
+    DUCOBOX_NODE_TYPE_VLVRH: [VENTILATION_STATE],
 }
 
 

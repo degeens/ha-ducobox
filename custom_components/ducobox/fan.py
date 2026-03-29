@@ -14,6 +14,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DucoBoxConfigEntry
+from .const import (
+    DUCOBOX_NODE_TYPE_BOX,
+    DUCOBOX_NODE_TYPE_VLV,
+    DUCOBOX_NODE_TYPE_VLVCO2,
+    DUCOBOX_NODE_TYPE_VLVRH,
+)
 from .coordinator import DucoBoxCoordinator, DucoBoxOptionsCoordinator
 from .entity import DucoBoxEntity
 from .models import DucoBoxNode
@@ -39,15 +45,15 @@ VENTILATION_FAN = DucoBoxFanEntityDescription(
 )
 
 FANS_BY_NODE_TYPE: dict[str, list[DucoBoxFanEntityDescription]] = {
-    "BOX": [VENTILATION_FAN],
-    "VLV": [VENTILATION_FAN],
-    "VLVCO2": [VENTILATION_FAN],
-    "VLVRH": [VENTILATION_FAN],
+    DUCOBOX_NODE_TYPE_BOX: [VENTILATION_FAN],
+    DUCOBOX_NODE_TYPE_VLV: [VENTILATION_FAN],
+    DUCOBOX_NODE_TYPE_VLVCO2: [VENTILATION_FAN],
+    DUCOBOX_NODE_TYPE_VLVRH: [VENTILATION_FAN],
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    hass: HomeAssistant,  # noqa: ARG001
     entry: DucoBoxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:

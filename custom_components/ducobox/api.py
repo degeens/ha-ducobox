@@ -5,17 +5,19 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiohttp import ClientSession
+from aiohttp import ClientSession, ClientTimeout
 
 from .models import DucoBoxInfo, DucoBoxNode
 from .utils import format_box_model_name
 
 _LOGGER = logging.getLogger(__name__)
 
+_TIMEOUT = ClientTimeout(total=10)
 
-def _get_val(data: Any, *keys: str) -> Any:
-    """Get nested keys from a dict and return the Val field."""
-    for key in (*keys, "Val"):
+
+def _get(data: Any, *keys: str) -> Any:
+    """Traverse nested dict keys, returning None if any key is missing."""
+    for key in keys:
         if isinstance(data, dict):
             data = data.get(key)
         else:
@@ -23,9 +25,9 @@ def _get_val(data: Any, *keys: str) -> Any:
     return data
 
 
-def _get_required_val(data: Any, *keys: str) -> Any:
-    """Get nested keys from a dict and return the Val field, raising on missing value."""
-    val = _get_val(data, *keys)
+def _get_required(data: Any, *keys: str) -> Any:
+    """Traverse nested dict keys, raising if the value is missing."""
+    val = _get(data, *keys)
     if val is None:
         field = keys[-1]
         msg = f"Failed to get {field}"
@@ -67,7 +69,7 @@ class DucoConnectivityBoardApi:
         url = f"{self._base_url}/info"
         params = {"parameter": "BoxName,SerialDucoBox,Mac"}
 
-        response = await self._session.get(url, params=params)
+        response = await self._session.get(url, params=params, timeout=_TIMEOUT)
         response.raise_for_status()
         data = await response.json()
 
@@ -75,9 +77,9 @@ class DucoConnectivityBoardApi:
         board = general.get("Board", {})
         lan = general.get("Lan", {})
 
-        model_name = _get_required_val(board, "BoxName")
-        serial_number = _get_required_val(board, "SerialDucoBox")
-        mac_address = _get_required_val(lan, "Mac")
+        model_name = _get_required(board, "BoxName", "Val")
+        serial_number = _get_required(board, "SerialDucoBox", "Val")
+        mac_address = _get_required(lan, "Mac", "Val")
 
         return DucoBoxInfo(
             model=format_box_model_name(model_name),
@@ -98,30 +100,31 @@ class DucoConnectivityBoardApi:
         """
         url = f"{self._base_url}/info/nodes"
 
-        response = await self._session.get(url)
+        response = await self._session.get(url, timeout=_TIMEOUT)
         response.raise_for_status()
         data = await response.json()
 
         nodes: list[DucoBoxNode] = []
 
         for node in data.get("Nodes", []):
-            node_id = node.get("Node")
+            node_id = _get_required(node, "Node")
+
             general = node.get("General", {})
-            node_type = _get_required_val(general, "Type")
-            parent_node_id = _get_required_val(general, "Parent")
+            node_type = _get_required(general, "Type", "Val")
+            parent_node_id = _get_required(general, "Parent", "Val")
 
             ventilation = node.get("Ventilation", {})
-            state = _get_val(ventilation, "State")
-            time_state_remain = _get_val(ventilation, "TimeStateRemain")
-            time_state_end = _get_val(ventilation, "TimeStateEnd")
-            mode = _get_val(ventilation, "Mode")
-            flow_lvl_tgt = _get_val(ventilation, "FlowLvlTgt")
+            state = _get(ventilation, "State", "Val")
+            time_state_remain = _get(ventilation, "TimeStateRemain", "Val")
+            time_state_end = _get(ventilation, "TimeStateEnd", "Val")
+            mode = _get(ventilation, "Mode", "Val")
+            flow_lvl_tgt = _get(ventilation, "FlowLvlTgt", "Val")
 
             sensor = node.get("Sensor", {})
-            rh = _get_val(sensor, "Rh")
-            iaq_rh = _get_val(sensor, "IaqRh")
-            co2 = _get_val(sensor, "Co2")
-            iaq_co2 = _get_val(sensor, "IaqCo2")
+            rh = _get(sensor, "Rh", "Val")
+            iaq_rh = _get(sensor, "IaqRh", "Val")
+            co2 = _get(sensor, "Co2", "Val")
+            iaq_co2 = _get(sensor, "IaqCo2", "Val")
 
             duco_node = DucoBoxNode(
                 node_id=node_id,
@@ -156,7 +159,7 @@ class DucoConnectivityBoardApi:
         url = f"{self._base_url}/action/nodes"
         params = {"action": "SetVentilationState"}
 
-        response = await self._session.get(url, params=params)
+        response = await self._session.get(url, params=params, timeout=_TIMEOUT)
         response.raise_for_status()
         data = await response.json()
 
@@ -201,7 +204,7 @@ class DucoConnectivityBoardApi:
         url = f"{self._base_url}/action/nodes/{node_id}"
         payload = {"Action": "SetVentilationState", "Val": state}
 
-        response = await self._session.post(url, json=payload)
+        response = await self._session.post(url, json=payload, timeout=_TIMEOUT)
         response.raise_for_status()
         result = await response.json()
 
