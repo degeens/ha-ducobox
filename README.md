@@ -8,7 +8,7 @@ A Home Assistant integration for DucoBox ventilation systems using the Connectiv
 
 ## Features
 
-This integration enables controlling and monitoring DucoBox ventilation systems. All nodes connected through the Connectivity Board are automatically discovered and each node is represented as a separate device in Home Assistant.
+This integration enables controlling and monitoring DucoBox ventilation systems. All nodes connected to the DucoBox are automatically discovered, with each node represented as a separate device in Home Assistant.
 
 The following table lists all supported entities per node type:
 
