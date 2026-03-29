@@ -8,7 +8,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, DUCOBOX_NODE_TYPE_BOX
 from .coordinator import DucoBoxCoordinator
-from .models import DucoNode
+from .models import DucoBoxNode
 
 
 class DucoBoxEntity(CoordinatorEntity[DucoBoxCoordinator]):
@@ -16,7 +16,7 @@ class DucoBoxEntity(CoordinatorEntity[DucoBoxCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: DucoBoxCoordinator, node: DucoNode) -> None:
+    def __init__(self, coordinator: DucoBoxCoordinator, node: DucoBoxNode) -> None:
         """Initialize DucoBox entity."""
         super().__init__(coordinator)
 

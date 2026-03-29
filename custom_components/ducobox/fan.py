@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import cast
 
 from homeassistant.components.fan import (
     FanEntity,
@@ -17,30 +16,33 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import DucoBoxConfigEntry
 from .coordinator import DucoBoxCoordinator, DucoBoxOptionsCoordinator
 from .entity import DucoBoxEntity
-from .models import DucoBoxNode, DucoNode
+from .models import DucoBoxNode
 
 
 @dataclass(frozen=True, kw_only=True)
 class DucoBoxFanEntityDescription(FanEntityDescription):
     """Describes a DucoBox fan entity."""
 
-    value_fn: Callable[[DucoNode], str | None]
+    value_fn: Callable[[DucoBoxNode], str | None]
     options_fn: Callable[[DucoBoxOptionsCoordinator, int], list[str]]
     set_fn: Callable[[DucoBoxCoordinator, int, str], Awaitable[None]]
 
 
+VENTILATION_FAN = DucoBoxFanEntityDescription(
+    key="ventilation",
+    translation_key="ventilation",
+    value_fn=lambda data: data.state,
+    options_fn=lambda coordinator, node_id: coordinator.data.get(node_id, []),
+    set_fn=lambda coordinator, node_id, state: coordinator.async_set_ventilation_state(
+        node_id, state
+    ),
+)
+
 FANS_BY_NODE_TYPE: dict[str, list[DucoBoxFanEntityDescription]] = {
-    "BOX": [
-        DucoBoxFanEntityDescription(
-            key="ventilation",
-            translation_key="ventilation",
-            value_fn=lambda data: cast("DucoBoxNode", data).state,
-            options_fn=lambda coordinator, node_id: coordinator.data.get(node_id, []),
-            set_fn=lambda coordinator, node_id, state: (
-                coordinator.async_set_ventilation_state(node_id, state)
-            ),
-        ),
-    ],
+    "BOX": [VENTILATION_FAN],
+    "VLV": [VENTILATION_FAN],
+    "VLVCO2": [VENTILATION_FAN],
+    "VLVRH": [VENTILATION_FAN],
 }
 
 
@@ -70,7 +72,7 @@ class DucoBoxFanEntity(DucoBoxEntity, FanEntity):
         self,
         coordinator: DucoBoxCoordinator,
         options_coordinator: DucoBoxOptionsCoordinator,
-        node: DucoNode,
+        node: DucoBoxNode,
         fan_description: DucoBoxFanEntityDescription,
     ) -> None:
         """Initialize DucoBox fan entity."""

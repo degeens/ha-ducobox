@@ -13,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import DucoConnectivityBoardApi
-from .models import DucoBoxInfo, DucoNode
+from .models import DucoBoxInfo, DucoBoxNode
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class DucoBoxRuntimeData:
 type DucoBoxConfigEntry = ConfigEntry[DucoBoxRuntimeData]
 
 
-class DucoBoxCoordinator(DataUpdateCoordinator[dict[int, DucoNode]]):
+class DucoBoxCoordinator(DataUpdateCoordinator[dict[int, DucoBoxNode]]):
     """Class to manage fetching DucoBox data."""
 
     config_entry: ConfigEntry
@@ -64,7 +64,7 @@ class DucoBoxCoordinator(DataUpdateCoordinator[dict[int, DucoNode]]):
             msg = f"Failed to setup coordinator: {err}"
             raise UpdateFailed(msg) from err
 
-    async def _async_update_data(self) -> dict[int, DucoNode]:
+    async def _async_update_data(self) -> dict[int, DucoBoxNode]:
         """Update the data."""
         try:
             nodes = await self.api.async_get_nodes()

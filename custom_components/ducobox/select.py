@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import cast
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -13,30 +12,33 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import DucoBoxConfigEntry
 from .coordinator import DucoBoxCoordinator, DucoBoxOptionsCoordinator
 from .entity import DucoBoxEntity
-from .models import DucoBoxNode, DucoNode
+from .models import DucoBoxNode
 
 
 @dataclass(frozen=True, kw_only=True)
 class DucoBoxSelectEntityDescription(SelectEntityDescription):
     """Describes a DucoBox select entity."""
 
-    value_fn: Callable[[DucoNode], str | None]
+    value_fn: Callable[[DucoBoxNode], str | None]
     options_fn: Callable[[DucoBoxOptionsCoordinator, int], list[str]]
     select_fn: Callable[[DucoBoxCoordinator, int, str], Awaitable[None]]
 
 
+VENTILATION_STATE = DucoBoxSelectEntityDescription(
+    key="ventilation_state",
+    translation_key="ventilation_state",
+    value_fn=lambda data: data.state,
+    options_fn=lambda coordinator, node_id: coordinator.data.get(node_id, []),
+    select_fn=lambda coordinator, node_id, option: (
+        coordinator.async_set_ventilation_state(node_id, option)
+    ),
+)
+
 SELECTS_BY_NODE_TYPE: dict[str, list[DucoBoxSelectEntityDescription]] = {
-    "BOX": [
-        DucoBoxSelectEntityDescription(
-            key="ventilation_state",
-            translation_key="ventilation_state",
-            value_fn=lambda data: cast("DucoBoxNode", data).state,
-            options_fn=lambda coordinator, node_id: coordinator.data.get(node_id, []),
-            select_fn=lambda coordinator, node_id, option: (
-                coordinator.async_set_ventilation_state(node_id, option)
-            ),
-        ),
-    ],
+    "BOX": [VENTILATION_STATE],
+    "VLV": [VENTILATION_STATE],
+    "VLVCO2": [VENTILATION_STATE],
+    "VLVRH": [VENTILATION_STATE],
 }
 
 
@@ -65,7 +67,7 @@ class DucoBoxSelectEntity(DucoBoxEntity, SelectEntity):
         self,
         coordinator: DucoBoxCoordinator,
         options_coordinator: DucoBoxOptionsCoordinator,
-        node: DucoNode,
+        node: DucoBoxNode,
         select_description: DucoBoxSelectEntityDescription,
     ) -> None:
         """Initialize DucoBox select entity."""

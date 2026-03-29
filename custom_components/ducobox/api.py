@@ -7,14 +7,7 @@ from typing import Any
 
 from aiohttp import ClientSession
 
-from .models import (
-    DucoBoxInfo,
-    DucoBoxNode,
-    DucoBsrhNode,
-    DucoNode,
-    DucoUcbatNode,
-    DucoUcco2Node,
-)
+from .models import DucoBoxInfo, DucoBoxNode
 from .utils import format_box_model_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,12 +85,12 @@ class DucoConnectivityBoardApi:
             mac_address=mac_address,
         )
 
-    async def async_get_nodes(self) -> list[DucoNode]:
+    async def async_get_nodes(self) -> list[DucoBoxNode]:
         """
         Fetch all Duco nodes.
 
         Returns:
-            list[DucoNode]: List of Duco nodes.
+            list[DucoBoxNode]: List of Duco nodes.
 
         Raises:
             ClientResponseError: If the HTTP request fails.
@@ -109,7 +102,7 @@ class DucoConnectivityBoardApi:
         response.raise_for_status()
         data = await response.json()
 
-        nodes: list[DucoNode] = []
+        nodes: list[DucoBoxNode] = []
 
         for node in data.get("Nodes", []):
             node_id = node.get("Node")
@@ -117,73 +110,33 @@ class DucoConnectivityBoardApi:
             node_type = _get_required_val(general, "Type")
             parent_node_id = _get_required_val(general, "Parent")
 
-            duco_node: DucoNode
+            ventilation = node.get("Ventilation", {})
+            state = _get_val(ventilation, "State")
+            time_state_remain = _get_val(ventilation, "TimeStateRemain")
+            time_state_end = _get_val(ventilation, "TimeStateEnd")
+            mode = _get_val(ventilation, "Mode")
+            flow_lvl_tgt = _get_val(ventilation, "FlowLvlTgt")
 
-            match node_type:
-                case "BOX":
-                    ventilation = node.get("Ventilation", {})
+            sensor = node.get("Sensor", {})
+            rh = _get_val(sensor, "Rh")
+            iaq_rh = _get_val(sensor, "IaqRh")
+            co2 = _get_val(sensor, "Co2")
+            iaq_co2 = _get_val(sensor, "IaqCo2")
 
-                    state = _get_val(ventilation, "State")
-                    time_state_remain = _get_val(ventilation, "TimeStateRemain")
-                    time_state_end = _get_val(ventilation, "TimeStateEnd")
-                    mode = _get_val(ventilation, "Mode")
-                    flow_lvl_tgt = _get_val(ventilation, "FlowLvlTgt")
-
-                    duco_node = DucoBoxNode(
-                        node_id=node_id,
-                        node_type=node_type,
-                        parent_node_id=parent_node_id,
-                        state=state,
-                        time_state_remain=time_state_remain,
-                        time_state_end=time_state_end,
-                        mode=mode,
-                        flow_lvl_tgt=flow_lvl_tgt,
-                    )
-                case "BSRH":
-                    sensor = node.get("Sensor", {})
-
-                    rh = _get_val(sensor, "Rh")
-                    iaq_rh = _get_val(sensor, "IaqRh")
-
-                    duco_node = DucoBsrhNode(
-                        node_id=node_id,
-                        node_type=node_type,
-                        parent_node_id=parent_node_id,
-                        rh=rh,
-                        iaq_rh=iaq_rh,
-                    )
-                case "UCBAT":
-                    duco_node = DucoUcbatNode(
-                        node_id=node_id,
-                        node_type=node_type,
-                        parent_node_id=parent_node_id,
-                    )
-                case "UCCO2":
-                    sensor = node.get("Sensor", {})
-
-                    co2 = _get_val(sensor, "Co2")
-                    iaq_co2 = _get_val(sensor, "IaqCo2")
-
-                    duco_node = DucoUcco2Node(
-                        node_id=node_id,
-                        node_type=node_type,
-                        parent_node_id=parent_node_id,
-                        co2=co2,
-                        iaq_co2=iaq_co2,
-                    )
-                case _:
-                    _LOGGER.warning(
-                        "Unknown node type '%s' for node %s, "
-                        "falling back to base DucoNode",
-                        node_type,
-                        node_id,
-                    )
-
-                    duco_node = DucoNode(
-                        node_id=node_id,
-                        node_type=node_type,
-                        parent_node_id=parent_node_id,
-                    )
+            duco_node = DucoBoxNode(
+                node_id=node_id,
+                node_type=node_type,
+                parent_node_id=parent_node_id,
+                state=state,
+                time_state_remain=time_state_remain,
+                time_state_end=time_state_end,
+                mode=mode,
+                flow_lvl_tgt=flow_lvl_tgt,
+                rh=rh,
+                iaq_rh=iaq_rh,
+                co2=co2,
+                iaq_co2=iaq_co2,
+            )
 
             nodes.append(duco_node)
 
