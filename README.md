@@ -48,7 +48,7 @@ This integration should work with all DucoBox models compatible with the Connect
 
 ### Tested configuration
 
-This integration is continuously tested and verified to work by the maintainer with:
+This integration is continuously tested and verified to work with:
 
 - DucoBox Silent Connect
 - Duco Connectivity Board 2.0 (API version 2.5)
