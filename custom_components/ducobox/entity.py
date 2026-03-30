@@ -23,25 +23,35 @@ class DucoBoxEntity(CoordinatorEntity[DucoBoxCoordinator]):
 
         box_info = coordinator.box_info
 
+        identifiers = {(DOMAIN, f"{box_info.serial_number}_{node.node_id}")}
+        manufacturer = "Duco"
+        name = (
+            f"{node.node_type} {node.node_id} ({node.name})"
+            if node.name
+            else f"{node.node_type} {node.node_id}"
+        )
+        model = node.node_type
+        configuration_url = f"http://{coordinator.config_entry.data[CONF_HOST]}"
+
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{box_info.serial_number}_{node.node_id}")},
-            manufacturer="Duco",
-            name=f"{node.node_type} {node.node_id}",
-            model=node.node_type,
-            configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
+            identifiers=identifiers,
+            manufacturer=manufacturer,
+            name=name,
+            model=model,
+            configuration_url=configuration_url,
         )
 
         if node.node_type != DUCOBOX_NODE_TYPE_BOX:
-            self._attr_device_info["via_device"] = (
-                DOMAIN,
-                f"{box_info.serial_number}_{node.parent_node_id}",
-            )
+            via_device = (DOMAIN, f"{box_info.serial_number}_{node.parent_node_id}")
+
+            self._attr_device_info["via_device"] = via_device
 
         if node.node_type == DUCOBOX_NODE_TYPE_BOX:
-            self._attr_device_info["serial_number"] = box_info.serial_number
-            self._attr_device_info["connections"] = {
-                (CONNECTION_NETWORK_MAC, box_info.mac_address)
-            }
+            serial_number = box_info.serial_number
+            connections = {(CONNECTION_NETWORK_MAC, box_info.mac_address)}
+
+            self._attr_device_info["serial_number"] = serial_number
+            self._attr_device_info["connections"] = connections
 
     @property
     def available(self) -> bool:

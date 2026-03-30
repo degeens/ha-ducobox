@@ -112,6 +112,7 @@ class DucoConnectivityBoardApi:
             general = node.get("General", {})
             node_type = _get_required(general, "Type", "Val")
             parent_node_id = _get_required(general, "Parent", "Val")
+            name = _get(general, "Name", "Val")
 
             ventilation = node.get("Ventilation", {})
             state = _get(ventilation, "State", "Val")
@@ -130,6 +131,7 @@ class DucoConnectivityBoardApi:
                 node_id=node_id,
                 node_type=node_type,
                 parent_node_id=parent_node_id,
+                name=name,
                 state=state,
                 time_state_remain=time_state_remain,
                 time_state_end=time_state_end,
