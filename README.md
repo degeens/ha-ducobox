@@ -12,19 +12,21 @@ This integration enables controlling and monitoring DucoBox ventilation systems.
 
 The following table lists all supported entities per node type:
 
-| Entity | Type | BOX | BSRH | UCCO2 | VLV | VLVCO2 | VLVRH |
-|---|---|:---:|:---:|:---:|:---:|:---:|:---:|
-| Ventilation | Fan | ✓ | | | ✓ | ✓ | ✓ |
-| Ventilation State | Select | ✓ | | | ✓ | ✓ | ✓ |
-| Ventilation Mode | Sensor | ✓ | | | ✓ | ✓ | ✓ |
-| Ventilation State | Sensor | ✓ | | | ✓ | ✓ | ✓ |
-| Ventilation State End Time | Sensor | ✓ | | | ✓ | ✓ | ✓ |
-| Ventilation State Remaining Time | Sensor | ✓ | | | ✓ | ✓ | ✓ |
-| Target Flow Level | Sensor | ✓ | | | ✓ | ✓ | ✓ |
-| Relative Humidity | Sensor | | ✓ | | | | ✓ |
-| Air Quality Index (Relative Humidity) | Sensor | | ✓ | | | | ✓ |
-| CO₂ | Sensor | | | ✓ | | ✓ | |
-| Air Quality Index (CO₂) | Sensor | | | ✓ | | ✓ | |
+| Entity | Type | BOX | BSRH | UCBAT | UCCO2 | VLV | VLVCO2 | VLVRH |
+|---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Ventilation | Fan | ✓ | | | | ✓ | ✓ | ✓ |
+| Ventilation State | Select | ✓ | | | | ✓ | ✓ | ✓ |
+| Ventilation Mode | Sensor | ✓ | | | | ✓ | ✓ | ✓ |
+| Ventilation State | Sensor | ✓ | | | | ✓ | ✓ | ✓ |
+| Ventilation State End Time | Sensor | ✓ | | | | ✓ | ✓ | ✓ |
+| Ventilation State Remaining Time | Sensor | ✓ | | | | ✓ | ✓ | ✓ |
+| Target Flow Level | Sensor | ✓ | | | | ✓ | ✓ | ✓ |
+| Relative Humidity | Sensor | | ✓ | | | | | ✓ |
+| Air Quality Index (Relative Humidity) | Sensor | | ✓ | | | | | ✓ |
+| CO₂ | Sensor | | | | ✓ | | ✓ | |
+| Air Quality Index (CO₂) | Sensor | | | | ✓ | | ✓ | |
+| Network Type | Sensor | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Identify | Button | ✓ | | | | | | |
 
 If you are missing a node type or entity, or if something is not working correctly, please [create a GitHub issue](https://github.com/degeens/ha-ducobox/issues/new).
 

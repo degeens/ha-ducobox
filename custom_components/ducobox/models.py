@@ -21,7 +21,9 @@ class DucoBoxNode:
     node_id: int
     node_type: str
     parent_node_id: int
+
     name: str | None = None
+    network_type: str | None = None
 
     state: str | None = None
     time_state_remain: int | None = None

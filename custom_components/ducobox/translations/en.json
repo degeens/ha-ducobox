@@ -23,6 +23,11 @@
         }
     },
     "entity": {
+        "button": {
+            "identify": {
+                "name": "Identify"
+            }
+        },
         "fan": {
             "ventilation": {
                 "name": "Ventilation"
@@ -52,6 +57,9 @@
                     "auto": "Auto",
                     "manu": "Manual"
                 }
+            },
+            "network_type": {
+                "name": "Network Type"
             },
             "rh": {
                 "name": "Relative Humidity"

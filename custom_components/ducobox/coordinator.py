@@ -87,6 +87,17 @@ class DucoBoxCoordinator(DataUpdateCoordinator[dict[int, DucoBoxNode]]):
             msg = f"Failed to set ventilation state on node {node_id} to {state}: {err}"
             raise HomeAssistantError(msg) from err
 
+    async def async_set_identify(self, node_id: int) -> None:
+        """Set identify."""
+        try:
+            success = await self.api.async_set_identify(node_id)
+            if not success:
+                msg = f"Failed to set identify on node {node_id}"
+                raise HomeAssistantError(msg)
+        except ClientError as err:
+            msg = f"Failed to set identify on node {node_id}: {err}"
+            raise HomeAssistantError(msg) from err
+
 
 class DucoBoxOptionsCoordinator(DataUpdateCoordinator[dict[int, list[str]]]):
     """Class to manage fetching DucoBox ventilation state options."""
