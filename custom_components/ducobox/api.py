@@ -113,6 +113,7 @@ class DucoConnectivityBoardApi:
             node_type = _get_required(general, "Type", "Val")
             parent_node_id = _get_required(general, "Parent", "Val")
             name = _get(general, "Name", "Val")
+            network_type = _get(general, "NetworkType", "Val")
 
             ventilation = node.get("Ventilation", {})
             state = _get(ventilation, "State", "Val")
@@ -132,6 +133,7 @@ class DucoConnectivityBoardApi:
                 node_type=node_type,
                 parent_node_id=parent_node_id,
                 name=name,
+                network_type=network_type,
                 state=state,
                 time_state_remain=time_state_remain,
                 time_state_end=time_state_end,
@@ -215,5 +217,33 @@ class DucoConnectivityBoardApi:
 
         if not success:
             _LOGGER.warning("Action SetVentilationState for node %s failed", node_id)
+
+        return success
+
+    async def async_set_identify(self, node_id: int) -> bool:
+        """
+        Set identify on the DucoBox device.
+
+        Args:
+            node_id: The Duco node ID.
+
+        Returns:
+            bool: True if the identify action was set successfully, false otherwise.
+
+        Raises:
+            ClientResponseError: If the HTTP request fails.
+
+        """
+        url = f"{self._base_url}/action/nodes/{node_id}"
+        payload = {"Action": "SetIdentify", "Val": True}
+
+        response = await self._session.post(url, json=payload, timeout=_TIMEOUT)
+        response.raise_for_status()
+        result = await response.json()
+
+        success = result.get("Result") == "SUCCESS"
+
+        if not success:
+            _LOGGER.warning("Action SetIdentify for node %s failed", node_id)
 
         return success

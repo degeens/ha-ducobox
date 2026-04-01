@@ -3,7 +3,12 @@
 from homeassistant.const import Platform
 
 DOMAIN = "ducobox"
-PLATFORMS: list[Platform] = [Platform.FAN, Platform.SELECT, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
+    Platform.FAN,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 
 DUCOBOX_VENTILATION_MODES = [
     "AUTO",

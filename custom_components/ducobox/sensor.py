@@ -12,7 +12,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONCENTRATION_PARTS_PER_MILLION, PERCENTAGE, UnitOfTime
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -22,6 +27,7 @@ from . import DucoBoxConfigEntry
 from .const import (
     DUCOBOX_NODE_TYPE_BOX,
     DUCOBOX_NODE_TYPE_BSRH,
+    DUCOBOX_NODE_TYPE_UCBAT,
     DUCOBOX_NODE_TYPE_UCCO2,
     DUCOBOX_NODE_TYPE_VLV,
     DUCOBOX_NODE_TYPE_VLVCO2,
@@ -123,15 +129,30 @@ RH_SENSORS: list[DucoBoxSensorEntityDescription] = [
     ),
 ]
 
+NETWORKTYPE_SENSORS: list[DucoBoxSensorEntityDescription] = [
+    DucoBoxSensorEntityDescription(
+        key="network_type",
+        translation_key="network_type",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.network_type,
+    )
+]
+
 SENSORS_BY_NODE_TYPE: dict[str, list[DucoBoxSensorEntityDescription]] = {
-    DUCOBOX_NODE_TYPE_BOX: VENTILATION_SENSORS,
-    DUCOBOX_NODE_TYPE_BSRH: RH_SENSORS,
-    DUCOBOX_NODE_TYPE_UCCO2: CO2_SENSORS,
-    DUCOBOX_NODE_TYPE_VLV: VENTILATION_SENSORS,
-    DUCOBOX_NODE_TYPE_VLVCO2: [*VENTILATION_SENSORS, *CO2_SENSORS],
+    DUCOBOX_NODE_TYPE_BOX: [*VENTILATION_SENSORS, *NETWORKTYPE_SENSORS],
+    DUCOBOX_NODE_TYPE_BSRH: [*RH_SENSORS, *NETWORKTYPE_SENSORS],
+    DUCOBOX_NODE_TYPE_UCBAT: [*NETWORKTYPE_SENSORS],
+    DUCOBOX_NODE_TYPE_UCCO2: [*CO2_SENSORS, *NETWORKTYPE_SENSORS],
+    DUCOBOX_NODE_TYPE_VLV: [*VENTILATION_SENSORS, *NETWORKTYPE_SENSORS],
+    DUCOBOX_NODE_TYPE_VLVCO2: [
+        *VENTILATION_SENSORS,
+        *CO2_SENSORS,
+        *NETWORKTYPE_SENSORS,
+    ],
     DUCOBOX_NODE_TYPE_VLVRH: [
         *VENTILATION_SENSORS,
         *RH_SENSORS,
+        *NETWORKTYPE_SENSORS,
     ],
 }
 
