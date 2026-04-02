@@ -22,9 +22,9 @@ The following table lists all supported entities per node type:
 | Ventilation State Remaining Time | Sensor | ✓ | | | | ✓ | ✓ | ✓ |
 | Target Flow Level | Sensor | ✓ | | | | ✓ | ✓ | ✓ |
 | Relative Humidity | Sensor | | ✓ | | | | | ✓ |
-| Air Quality Index (Relative Humidity) | Sensor | | ✓ | | | | | ✓ |
-| CO₂ | Sensor | | | | ✓ | | ✓ | |
-| Air Quality Index (CO₂) | Sensor | | | | ✓ | | ✓ | |
+| Relative Humidity Air Quality Index | Sensor | | ✓ | | | | | ✓ |
+| CO2 | Sensor | | | | ✓ | | ✓ | |
+| CO2 Air Quality Index | Sensor | | | | ✓ | | ✓ | |
 | Network Type | Sensor | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Identify | Button | ✓ | | | | | | |
 
