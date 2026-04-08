@@ -1,0 +1,95 @@
+name: New Node/Entity Request
+description: Request support for a new node type or additional entities for an existing node. Please create one issue per node type.
+title: "[New Node/Entity Request]: "
+labels: ["enhancement"]
+assignees:
+  - degeens
+body:
+  - type: input
+    id: node_name
+    attributes:
+      label: Node Type
+      description: The name of the node type as shown in the Duco "Node Info" page.
+      placeholder: e.g. "BOX", "UCBAT", "BSRH", ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: node_description
+    attributes:
+      label: Node Description
+      description: Describe what this node is and what it does.
+      placeholder: e.g. A relative humidity box sensor.
+    validations:
+      required: false
+
+  - type: textarea
+    id: requested_entities
+    attributes:
+      label: Requested Entities
+      description: List the entities you would like to see in Home Assistant for this node. Include the entity type (sensor, select, button, fan, ...) and what value it represents.
+      placeholder: |
+        - sensor: Relative humidity (%)
+        - sensor: CO₂ (ppm)
+        - select: Ventilation mode (AUTO / MAN1 / MAN2 / MAN3)
+    validations:
+      required: true
+
+  - type: textarea
+    id: info_response
+    attributes:
+      label: Example Response from `/info`
+      description: |
+        Paste the full JSON response from the `http://<your-duco-connectivity-board-ip>/info` API endpoint.
+      render: json
+      placeholder: |
+        {
+          ...
+        }
+    validations:
+      required: true
+
+  - type: textarea
+    id: info_nodes_response
+    attributes:
+      label: Example Response from `/info/nodes`
+      description: |
+        Paste the full JSON response for this node from the `http://<your-duco-connectivity-board-ip>/info/nodes` API endpoint.
+      render: json
+      placeholder: |
+        {
+          ...
+        }
+    validations:
+      required: true
+
+  - type: textarea
+    id: action_nodes_response
+    attributes:
+      label: Example Response from `/action/nodes`
+      description: |
+        Paste the full JSON response for this node from the `http://<your-duco-connectivity-board-ip>/action/nodes` API endpoint.
+      render: json
+      placeholder: |
+        {
+          ...
+        }
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_information
+    attributes:
+      label: Additional Information
+      description: Include any other information that might be helpful.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: connectivity_board
+    attributes:
+      label: Duco Connectivity Board 2.0
+      description: Confirm you are using the Duco Connectivity Board 2.0.
+      options:
+        - label: I confirm I am using the **Duco Connectivity Board 2.0**
+          required: true
