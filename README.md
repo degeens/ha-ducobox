@@ -14,21 +14,21 @@ A Home Assistant integration for DucoBox ventilation systems using the Connectiv
 
 The following table lists all supported entities per node:
 
-| Entity | Type | BOX | BSRH | UCBAT | UCCO2 | VLV | VLVCO2 | VLVRH |
-|---:|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| Ventilation | Fan | ✓ | | | | ✓ | ✓ | ✓ |
-| Ventilation State | Select | ✓ | | | | ✓ | ✓ | ✓ |
-| Ventilation Mode | Sensor | ✓ | | | | ✓ | ✓ | ✓ |
-| Ventilation State | Sensor | ✓ | | | | ✓ | ✓ | ✓ |
-| Ventilation State End Time | Sensor | ✓ | | | | ✓ | ✓ | ✓ |
-| Ventilation State Remaining Time | Sensor | ✓ | | | | ✓ | ✓ | ✓ |
-| Target Flow Level | Sensor | ✓ | | | | ✓ | ✓ | ✓ |
-| Relative Humidity | Sensor | | ✓ | | | | | ✓ |
-| Relative Humidity Air Quality Index | Sensor | | ✓ | | | | | ✓ |
-| CO2 | Sensor | | | | ✓ | | ✓ | |
-| CO2 Air Quality Index | Sensor | | | | ✓ | | ✓ | |
-| Network Type | Sensor | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Identify | Button | ✓ | | | | | | |
+| Entity | Type | BOX | BSRH | UCBAT | UCCO2 | VLV | VLVCO2 | VLVCO2RH | VLVRH |
+|---:|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Ventilation | Fan | ✓ | | | | ✓ | ✓ | ✓ | ✓ |
+| Ventilation State | Select | ✓ | | | | ✓ | ✓ | ✓ | ✓ |
+| Ventilation Mode | Sensor | ✓ | | | | ✓ | ✓ | ✓ | ✓ |
+| Ventilation State | Sensor | ✓ | | | | ✓ | ✓ | ✓ | ✓ |
+| Ventilation State End Time | Sensor | ✓ | | | | ✓ | ✓ | ✓ | ✓ |
+| Ventilation State Remaining Time | Sensor | ✓ | | | | ✓ | ✓ | ✓ | ✓ |
+| Target Flow Level | Sensor | ✓ | | | | ✓ | ✓ | ✓ | ✓ |
+| Relative Humidity | Sensor | | ✓ | | | | | ✓ | ✓ |
+| Relative Humidity Air Quality Index | Sensor | | ✓ | | | | | ✓ | ✓ |
+| CO2 | Sensor | | | | ✓ | | ✓ | ✓ | |
+| CO2 Air Quality Index | Sensor | | | | ✓ | | ✓ | ✓ | |
+| Network Type | Sensor | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Identify | Button | ✓ | | | | | | | |
 
 If you are missing a node or entity, feel free to [open an issue](https://github.com/degeens/ha-ducobox/issues) or [create a pull request](https://github.com/degeens/ha-ducobox/pulls).
 
