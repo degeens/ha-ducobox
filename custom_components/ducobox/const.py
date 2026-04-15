@@ -21,4 +21,5 @@ DUCOBOX_NODE_TYPE_UCBAT = "UCBAT"  # A Duco UCBAT (A battery-powered user contro
 DUCOBOX_NODE_TYPE_UCCO2 = "UCCO2"  # A Duco UCCO2 node
 DUCOBOX_NODE_TYPE_VLV = "VLV"  # A Duco VLV (A valve) node
 DUCOBOX_NODE_TYPE_VLVCO2 = "VLVCO2"  # A Duco VLVCO2 (A valve with CO2 sensor) node
+DUCOBOX_NODE_TYPE_VLVCO2RH = "VLVCO2RH"  # A Duco VLVCO2RH (A valve with CO2 and humidity sensor) node
 DUCOBOX_NODE_TYPE_VLVRH = "VLVRH"  # A Duco VLVRH (A valve with humidity sensor) node
