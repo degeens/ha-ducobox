@@ -16,6 +16,7 @@ ignore = [
     "TC001", # typing-only-first-party-import
     "TC002", # typing-only-third-party-import
     "TC003", # typing-only-standard-library-import
+    "CPY001", # missing-copyright-notice
 ]
 
 [lint.flake8-pytest-style]
