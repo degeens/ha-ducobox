@@ -1,8 +1,8 @@
 # DucoBox
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-[![GitHub Release](https://img.shields.io/github/release/degeens/ha-ducobox.svg)](https://github.com/degeens/ha-ducobox/releases)
-[![License](https://img.shields.io/github/license/degeens/ha-ducobox.svg)](LICENSE)
+[![GitHub Release](https://img.shields.io/github/release/sysadm1/ducofocus-cb.2.0.svg)](https://github.com/sysadm1/ducofocus-cb.2.0/releases)
+[![License](https://img.shields.io/github/license/sysadm1/ducofocus-cb.2.0.svg)](LICENSE)
 
 A Home Assistant integration for DucoBox ventilation systems using the Connectivity Board 2.0 local API.
 
@@ -12,7 +12,7 @@ A Home Assistant integration for DucoBox ventilation systems using the Connectiv
 - **Local API**: Communicates directly with the Duco Connectivity Board 2.0 over the local network
 - **Automatic discovery**: The box and all its connected nodes are automatically discovered and represented as separate devices in Home Assistant
 
-The following table lists all supported entities per node:
+The following table lists entities supported by this integration for each node type:
 
 | Entity | Type | BOX | BSRH | UCBAT | UCCO2 | VLV | VLVCO2 | VLVCO2RH | VLVRH |
 |---:|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
@@ -30,7 +30,11 @@ The following table lists all supported entities per node:
 | Network Type | Sensor | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Identify | Button | ✓ | | | | | | | |
 
-If you are missing a node or entity, feel free to [open an issue](https://github.com/degeens/ha-ducobox/issues) or [create a pull request](https://github.com/degeens/ha-ducobox/pulls).
+## Verified device
+
+The maintainer's device reports a DucoBox FOCUS with Connectivity Board 2.0 Public API version 2.7. Its node list contains the box, three VLVCO2 valves, one VLVRH valve, and two UCBAT controls. The API also advertises ventilation-state actions for nodes 1–7. This confirms the device's API shape; full control behavior still needs testing in Home Assistant.
+
+If you are missing a node or entity, feel free to [open an issue](https://github.com/sysadm1/ducofocus-cb.2.0/issues) or [create a pull request](https://github.com/sysadm1/ducofocus-cb.2.0/pulls).
 
 ## Installation
 
@@ -38,13 +42,13 @@ If you are missing a node or entity, feel free to [open an issue](https://github
 
 1. Open HACS in Home Assistant
 2. Click the three dots in the top right corner and select "Custom repositories"
-3. Add repository `https://github.com/degeens/ha-ducobox` with category "Integration"
+3. Add repository `https://github.com/sysadm1/ducofocus-cb.2.0` with category "Integration"
 4. Search for "DucoBox", select the correct integration, and download it
 5. Restart Home Assistant
 
 ### Manual
 
-1. Download the latest release from [Releases](https://github.com/degeens/ha-ducobox/releases)
+1. Download the latest release from [Releases](https://github.com/sysadm1/ducofocus-cb.2.0/releases)
 2. Extract the `custom_components/ducobox` folder to your Home Assistant `custom_components` directory
 3. Restart Home Assistant
 
@@ -67,9 +71,9 @@ If you are missing a node or entity, feel free to [open an issue](https://github
 
 ## Contribution
 
-Since the maintainer's DucoBox setup is limited, community feedback is essential for expanding support for additional nodes and entities.
+The integration has been updated against a DucoBox FOCUS reporting Connectivity Board 2.0 API 2.7. Feedback from Home Assistant use will help confirm entity behavior and broaden support for other devices.
 
-If you encounter an unsupported node or entity, or have an improvement in mind, feel free to [open an issue](https://github.com/degeens/ha-ducobox/issues) or [create a pull request](https://github.com/degeens/ha-ducobox/pulls).
+If you encounter an unsupported node or entity, or have an improvement in mind, feel free to [open an issue](https://github.com/sysadm1/ducofocus-cb.2.0/issues) or [create a pull request](https://github.com/sysadm1/ducofocus-cb.2.0/pulls).
 
 
 ## License
