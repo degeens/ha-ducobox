@@ -179,15 +179,17 @@ class DucoConnectivityBoardApi:
             if not isinstance(actions, list) or len(actions) == 0:
                 continue
 
-            first_action = actions[0]
-            if not isinstance(first_action, dict):
-                continue
+            for action in actions:
+                if (
+                    not isinstance(action, dict)
+                    or action.get("Action") != "SetVentilationState"
+                ):
+                    continue
 
-            options = first_action.get("Enum")
-            if not isinstance(options, list) or len(options) == 0:
-                continue
-
-            ventilation_state_options[node_id] = options
+                options = action.get("Enum")
+                if isinstance(options, list) and options:
+                    ventilation_state_options[node_id] = options
+                break
 
         return ventilation_state_options
 
