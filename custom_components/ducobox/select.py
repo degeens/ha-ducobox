@@ -10,13 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DucoBoxConfigEntry
-from .const import (
-    DUCOBOX_NODE_TYPE_BOX,
-    DUCOBOX_NODE_TYPE_VLV,
-    DUCOBOX_NODE_TYPE_VLVCO2,
-    DUCOBOX_NODE_TYPE_VLVCO2RH,
-    DUCOBOX_NODE_TYPE_VLVRH,
-)
 from .coordinator import DucoBoxCoordinator, DucoBoxOptionsCoordinator
 from .entity import DucoBoxEntity
 from .models import DucoBoxNode
@@ -41,15 +34,6 @@ VENTILATION_STATE = DucoBoxSelectEntityDescription(
     ),
 )
 
-SELECTS_BY_NODE_TYPE: dict[str, list[DucoBoxSelectEntityDescription]] = {
-    DUCOBOX_NODE_TYPE_BOX: [VENTILATION_STATE],
-    DUCOBOX_NODE_TYPE_VLV: [VENTILATION_STATE],
-    DUCOBOX_NODE_TYPE_VLVCO2: [VENTILATION_STATE],
-    DUCOBOX_NODE_TYPE_VLVCO2RH: [VENTILATION_STATE],
-    DUCOBOX_NODE_TYPE_VLVRH: [VENTILATION_STATE],
-}
-
-
 async def async_setup_entry(
     hass: HomeAssistant,  # noqa: ARG001
     entry: DucoBoxConfigEntry,
@@ -60,9 +44,9 @@ async def async_setup_entry(
     options_coordinator = entry.runtime_data.options_coordinator
 
     async_add_entities(
-        DucoBoxSelectEntity(coordinator, options_coordinator, node, select_description)
+        DucoBoxSelectEntity(coordinator, options_coordinator, node, VENTILATION_STATE)
         for node in coordinator.data.values()
-        for select_description in SELECTS_BY_NODE_TYPE.get(node.node_type, [])
+        if options_coordinator.data.get(node.node_id)
     )
 
 
