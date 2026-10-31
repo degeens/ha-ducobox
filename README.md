@@ -17,7 +17,6 @@ The following table lists entities supported by this integration for each node t
 | Entity | Type | BOX | BSRH | UCBAT | UCCO2 | VLV | VLVCO2 | VLVCO2RH | VLVRH |
 |---:|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | Ventilation | Fan | ✓ | | | | ✓ | ✓ | ✓ | ✓ |
-| Ventilation State | Select | ✓ | | | | ✓ | ✓ | ✓ | ✓ |
 | Ventilation Mode | Sensor | ✓ | | | | ✓ | ✓ | ✓ | ✓ |
 | Ventilation State | Sensor | ✓ | | | | ✓ | ✓ | ✓ | ✓ |
 | Ventilation State End Time | Sensor | ✓ | | | | ✓ | ✓ | ✓ | ✓ |
@@ -30,9 +29,19 @@ The following table lists entities supported by this integration for each node t
 | Network Type | Sensor | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Identify | Button | ✓ | | | | | | | |
 
+Ventilation control selects are created dynamically for each node whose API advertises the `SetVentilationState` action. The Modbus select is shown only for nodes and modes with a documented Modbus value.
+
 ## Verified device
 
 The maintainer's device reports a DucoBox FOCUS with Connectivity Board 2.0 Public API version 2.7. Its node list contains the box, three VLVCO2 valves, one VLVRH valve, and two UCBAT controls. The API also advertises ventilation-state actions for nodes 1–7. This confirms the device's API shape; full control behavior still needs testing in Home Assistant.
+
+## Control with REST API and Modbus TCP
+
+Every node that advertises `SetVentilationState` gets a REST API select. Nodes 6 and 7 (UCBAT physical controls) are included when the board advertises that action. A separate Modbus select is also created for states that have a documented Modbus value. It uses Home Assistant's built-in Modbus integration, so configure a Modbus TCP hub for the Connectivity Board first (TCP port 502), then choose its hub name and slave ID in this integration's options.
+
+DUCO's Modbus register for ventilation state is `XX00`, where `XX` is the node number. Home Assistant uses zero-based register addresses, so the default adjustment writes node 6 to address 599 (DUCO register 0600) and node 7 to address 699 (DUCO register 0700). If your board's Modbus register offset is configured differently, adjust this in the integration options. DUCO documents a minimum interval of two seconds between writes; the integration spaces its control writes accordingly.
+
+Supported Modbus values are `AUTO`, `MAN1`–`MAN3`, `EMPT`, `CNT1`–`CNT3` and `MAN1x2`–`MAN3x3`. DUCO's Modbus sheet calls values 7 “not at home” and 8–10 “permanent” ventilation modes; mapping those to REST names `EMPT` and `CNT1`–`CNT3` is inferred from their meanings. `AUT1`–`AUT3` are available through REST but have no documented Modbus equivalent, so they are omitted from the Modbus select.
 
 If you are missing a node or entity, feel free to [open an issue](https://github.com/sysadm1/ducofocus-cb.2.0/issues) or [create a pull request](https://github.com/sysadm1/ducofocus-cb.2.0/pulls).
 

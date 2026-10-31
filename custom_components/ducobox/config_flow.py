@@ -8,12 +8,25 @@ from typing import Any
 import voluptuous as vol
 from aiohttp import ClientError
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import DucoConnectivityBoardApi
-from .const import DOMAIN
+from .const import (
+    CONF_MODBUS_ADDRESS_OFFSET,
+    CONF_MODBUS_HUB,
+    CONF_MODBUS_SLAVE,
+    DEFAULT_MODBUS_ADDRESS_OFFSET,
+    DEFAULT_MODBUS_HUB,
+    DEFAULT_MODBUS_SLAVE,
+    DOMAIN,
+)
 from .models import DucoBoxInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,6 +43,11 @@ class DucoBoxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
+
+    @staticmethod
+    def async_get_options_flow(_config_entry: ConfigEntry) -> OptionsFlowWithReload:
+        """Return options flow for Modbus settings."""
+        return DucoBoxOptionsFlow()
 
     _zeroconf_discovered_host: str
     _zeroconf_discovered_model: str
@@ -111,3 +129,35 @@ class DucoBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         api = DucoConnectivityBoardApi(host, session)
         return await api.async_get_box_info()
+
+
+class DucoBoxOptionsFlow(OptionsFlowWithReload):
+    """Configure the Modbus hub and addressing for this DucoBox."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage Modbus settings."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        current = self.config_entry.options
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_MODBUS_HUB,
+                    default=current.get(CONF_MODBUS_HUB, DEFAULT_MODBUS_HUB),
+                ): str,
+                vol.Required(
+                    CONF_MODBUS_SLAVE,
+                    default=current.get(CONF_MODBUS_SLAVE, DEFAULT_MODBUS_SLAVE),
+                ): vol.All(int, vol.Range(min=1, max=247)),
+                vol.Required(
+                    CONF_MODBUS_ADDRESS_OFFSET,
+                    default=current.get(
+                        CONF_MODBUS_ADDRESS_OFFSET, DEFAULT_MODBUS_ADDRESS_OFFSET
+                    ),
+                ): vol.In([-1, 0]),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

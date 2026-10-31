@@ -22,6 +22,24 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Modbus settings",
+                "description": "Configure the Home Assistant Modbus TCP hub used by the Modbus controls. The hub must already be configured in Home Assistant.",
+                "data": {
+                    "modbus_hub": "Modbus hub name",
+                    "modbus_slave": "Modbus slave ID",
+                    "modbus_address_offset": "Register address adjustment"
+                },
+                "data_description": {
+                    "modbus_hub": "The hub name configured in Home Assistant. Usually modbus_hub.",
+                    "modbus_slave": "The Modbus slave ID of the Connectivity Board.",
+                    "modbus_address_offset": "Home Assistant uses zero-based addresses. Use -1 for DUCO register 0600 at address 599 (recommended), or 0 if your hub expects address 600."
+                }
+            }
+        }
+    },
     "entity": {
         "button": {
             "identify": {
@@ -36,6 +54,9 @@
         "select": {
             "ventilation_state": {
                 "name": "Ventilation State"
+            },
+            "modbus_ventilation_state": {
+                "name": "Ventilation State (Modbus)"
             }
         },
         "sensor": {

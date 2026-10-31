@@ -9,7 +9,7 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/sysadm1/ducofocus-cb.2.0/issues",
   "requirements": [],
-  "version": "2.3.0",
+  "version": "2.4.0",
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
