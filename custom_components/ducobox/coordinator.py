@@ -158,6 +158,36 @@ class DucoBoxCoordinator(DataUpdateCoordinator[dict[int, DucoBoxNode]]):
             msg = f"Failed to set identify on node {node_id}: {err}"
             raise HomeAssistantError(msg) from err
 
+    async def async_execute_action(
+        self, action: str, *, node_id: int | None = None, value: object = None
+    ) -> None:
+        """Run an API-advertised box or node action."""
+        try:
+            async with self._write_lock:
+                await self._async_wait_for_write_slot()
+                await self.api.async_execute_action(action, node_id=node_id, value=value)
+            await self.async_request_refresh()
+        except ClientError as err:
+            target = "box" if node_id is None else f"node {node_id}"
+            raise HomeAssistantError(
+                f"Failed to run action {action} on {target}: {err}"
+            ) from err
+
+    async def async_patch_config(
+        self, path: list[str], value: object, *, node_id: int | None = None
+    ) -> None:
+        """Patch one API-advertised configuration field."""
+        try:
+            async with self._write_lock:
+                await self._async_wait_for_write_slot()
+                await self.api.async_patch_config(path, value, node_id=node_id)
+            await self.async_request_refresh()
+        except ClientError as err:
+            target = "box" if node_id is None else f"node {node_id}"
+            raise HomeAssistantError(
+                f"Failed to configure {'.'.join(path)} on {target}: {err}"
+            ) from err
+
 
 class DucoBoxOptionsCoordinator(DataUpdateCoordinator[dict[int, list[str]]]):
     """Class to manage fetching DucoBox ventilation state options."""

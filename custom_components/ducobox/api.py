@@ -53,6 +53,9 @@ class DucoConnectivityBoardApi:
         """
         self._base_url = f"http://{host}"
         self._session = session
+        # The DUCO web interface sends this header on every API request. The
+        # current local API accepts an empty key when security level is 0.
+        self._headers = {"Api-Key": ""}
 
     async def async_get_box_info(self) -> DucoBoxInfo:
         """
@@ -69,7 +72,9 @@ class DucoConnectivityBoardApi:
         url = f"{self._base_url}/info"
         params = {"parameter": "BoxName,SerialDucoBox,Mac"}
 
-        response = await self._session.get(url, params=params, timeout=_TIMEOUT)
+        response = await self._session.get(
+            url, params=params, headers=self._headers, timeout=_TIMEOUT
+        )
         response.raise_for_status()
         data = await response.json()
 
@@ -100,7 +105,7 @@ class DucoConnectivityBoardApi:
         """
         url = f"{self._base_url}/info/nodes"
 
-        response = await self._session.get(url, timeout=_TIMEOUT)
+        response = await self._session.get(url, headers=self._headers, timeout=_TIMEOUT)
         response.raise_for_status()
         data = await response.json()
 
@@ -164,7 +169,9 @@ class DucoConnectivityBoardApi:
         url = f"{self._base_url}/action/nodes"
         params = {"action": "SetVentilationState"}
 
-        response = await self._session.get(url, params=params, timeout=_TIMEOUT)
+        response = await self._session.get(
+            url, params=params, headers=self._headers, timeout=_TIMEOUT
+        )
         response.raise_for_status()
         data = await response.json()
 
@@ -211,7 +218,9 @@ class DucoConnectivityBoardApi:
         url = f"{self._base_url}/action/nodes/{node_id}"
         payload = {"Action": "SetVentilationState", "Val": state}
 
-        response = await self._session.post(url, json=payload, timeout=_TIMEOUT)
+        response = await self._session.post(
+            url, json=payload, headers=self._headers, timeout=_TIMEOUT
+        )
         response.raise_for_status()
         result = await response.json()
 
@@ -239,7 +248,9 @@ class DucoConnectivityBoardApi:
         url = f"{self._base_url}/action/nodes/{node_id}"
         payload = {"Action": "SetIdentify", "Val": True}
 
-        response = await self._session.post(url, json=payload, timeout=_TIMEOUT)
+        response = await self._session.post(
+            url, json=payload, headers=self._headers, timeout=_TIMEOUT
+        )
         response.raise_for_status()
         result = await response.json()
 
@@ -249,3 +260,82 @@ class DucoConnectivityBoardApi:
             _LOGGER.warning("Action SetIdentify for node %s failed", node_id)
 
         return success
+
+    async def async_get_action_definitions(
+        self, node_id: int | None = None
+    ) -> list[dict[str, Any]]:
+        """Get the actions advertised by the box or a specific node."""
+        if node_id is None:
+            url = f"{self._base_url}/action"
+            response = await self._session.get(
+                url, headers=self._headers, timeout=_TIMEOUT
+            )
+            response.raise_for_status()
+            data = await response.json()
+            return data if isinstance(data, list) else []
+
+        url = f"{self._base_url}/action/nodes/{node_id}"
+        response = await self._session.get(url, headers=self._headers, timeout=_TIMEOUT)
+        response.raise_for_status()
+        data = await response.json()
+        actions = data.get("Actions", []) if isinstance(data, dict) else []
+        return actions if isinstance(actions, list) else []
+
+    async def async_execute_action(
+        self, action: str, *, node_id: int | None = None, value: Any = None
+    ) -> None:
+        """Send one advertised box or node action using DUCO's REST API."""
+        url = (
+            f"{self._base_url}/action"
+            if node_id is None
+            else f"{self._base_url}/action/nodes/{node_id}"
+        )
+        payload: dict[str, Any] = {"Action": action}
+        if value is not None:
+            payload["Val"] = value
+
+        response = await self._session.post(
+            url,
+            json=payload,
+            headers=self._headers,
+            timeout=_TIMEOUT,
+        )
+        response.raise_for_status()
+
+    async def async_get_config(self, node_id: int | None = None) -> dict[str, Any]:
+        """Get box configuration or configuration for one node."""
+        url = (
+            f"{self._base_url}/config"
+            if node_id is None
+            else f"{self._base_url}/config/nodes/{node_id}"
+        )
+        response = await self._session.get(url, headers=self._headers, timeout=_TIMEOUT)
+        response.raise_for_status()
+        data = await response.json()
+        if not isinstance(data, dict):
+            raise DucoConnectivityBoardApiError("Configuration response is not an object")
+        return data
+
+    async def async_patch_config(
+        self, path: list[str], value: Any, *, node_id: int | None = None
+    ) -> None:
+        """Patch one box or node configuration value."""
+        if not path:
+            raise DucoConnectivityBoardApiError("Configuration path cannot be empty")
+
+        patch: dict[str, Any] = {"Val": value}
+        for key in reversed(path):
+            patch = {key: patch}
+
+        if node_id is not None:
+            url = f"{self._base_url}/config/nodes/{node_id}"
+        else:
+            url = f"{self._base_url}/config"
+
+        response = await self._session.patch(
+            url,
+            json=patch,
+            headers={**self._headers, "Content-Type": "application/json"},
+            timeout=_TIMEOUT,
+        )
+        response.raise_for_status()

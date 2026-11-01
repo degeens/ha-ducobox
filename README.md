@@ -31,6 +31,34 @@ The following table lists entities supported by this integration for each node t
 
 Ventilation control selects are created dynamically for each node whose API advertises the `SetVentilationState` action. The Modbus select is shown only for nodes and modes with a documented Modbus value.
 
+Two Home Assistant services expose other actions and settings advertised by the board:
+
+- `ducobox.execute_action` runs an advertised box action or node action. For example, use `SetVentilationState` with a node ID and one of that node's advertised enum values, or run a no-value action such as `ScanWifi` without a value.
+- `ducobox.patch_config` changes one configuration field. Use the dotted path from the live `/config` response, such as `General.Time.TimeZone`. For node configuration, provide the node ID and a path from `/config/nodes/{node}`.
+
+Both services require the DucoBox integration entry. They check the current action list or configuration metadata before sending a request and serialize writes to respect the board's two-second write interval. The API 2.7 catalog supplied for the verified device does not advertise zone, zone-group, or firmware routes; those pages return 404 or 401, so this integration does not expose those operations. Changes to network configuration can interrupt the connection to Home Assistant.
+
+Example service data:
+
+```yaml
+action: ducobox.execute_action
+data:
+  entry_id: YOUR_DUCOBOX_ENTRY_ID
+  node_id: 1
+  action: SetVentilationState
+  value: AUTO
+```
+
+```yaml
+action: ducobox.patch_config
+data:
+  entry_id: YOUR_DUCOBOX_ENTRY_ID
+  path: General.Time.TimeZone
+  value: 1
+```
+
+In Home Assistant's service/action editor, select the DucoBox entry instead of typing its ID manually. For a box action or box configuration, leave out `node_id`. The action and config names and allowed values are read from the board each time the service runs.
+
 ## Verified device
 
 The maintainer's device reports a DucoBox FOCUS with Connectivity Board 2.0 Public API version 2.7. Its node list contains the box, three VLVCO2 valves, one VLVRH valve, and two UCBAT controls. The API also advertises ventilation-state actions for nodes 1–7. This confirms the device's API shape; full control behavior still needs testing in Home Assistant.

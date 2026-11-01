@@ -17,6 +17,13 @@ from .coordinator import (
     DucoBoxOptionsCoordinator,
     DucoBoxRuntimeData,
 )
+from .services import async_setup_services
+
+
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:  # noqa: ARG001
+    """Set up DucoBox services."""
+    await async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DucoBoxConfigEntry) -> bool:

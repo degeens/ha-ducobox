@@ -1,0 +1,61 @@
+execute_action:
+  name: Execute DUCO action
+  description: Run an action advertised by the Connectivity Board or one of its nodes.
+  fields:
+    entry_id:
+      name: Integration entry
+      description: The DucoBox config entry to use.
+      required: true
+      selector:
+        config_entry:
+          integration: ducobox
+    action:
+      name: Action
+      description: Exact action name returned by GET /action or GET /action/nodes/{node}.
+      required: true
+      example: SetVentilationState
+      selector:
+        text:
+    node_id:
+      name: Node ID
+      description: Omit for a box-level action; provide the node number for a node action.
+      selector:
+        number:
+          min: 1
+          mode: box
+    value:
+      name: Value
+      description: Required for typed actions; use the advertised enum or a valid boolean or number.
+      selector:
+        text:
+patch_config:
+  name: Patch DUCO configuration
+  description: Update one configurable value exposed by the Connectivity Board API.
+  fields:
+    entry_id:
+      name: Integration entry
+      description: The DucoBox config entry to use.
+      required: true
+      selector:
+        config_entry:
+          integration: ducobox
+    path:
+      name: Configuration path
+      description: Dot-separated path to a field with a Val property in the live configuration response.
+      required: true
+      example: General.Time.TimeZone
+      selector:
+        text:
+    node_id:
+      name: Node ID
+      description: Omit for box configuration; provide the node number for node configuration.
+      selector:
+        number:
+          min: 1
+          mode: box
+    value:
+      name: Value
+      description: New value, checked against the type and limits reported by the board.
+      required: true
+      selector:
+        text:
