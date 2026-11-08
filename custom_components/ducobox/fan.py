@@ -11,7 +11,9 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.percentage import percentage_to_ordered_list_item
 
 from . import DucoBoxConfigEntry
 from .const import (
@@ -24,6 +26,25 @@ from .const import (
 from .coordinator import DucoBoxCoordinator, DucoBoxOptionsCoordinator
 from .entity import DucoBoxEntity
 from .models import DucoBoxNode
+
+# The Connectivity Board exposes three continuous ventilation states. They
+# are discrete API choices, so Home Assistant percentages select the nearest
+# supported level instead of sending an arbitrary 0-100 override.
+ORDERED_FAN_SPEEDS = ["CNT1", "CNT2", "CNT3"]
+SPEED_LEVEL_PERCENTAGES = [
+    (index + 1) * 100 // len(ORDERED_FAN_SPEEDS)
+    for index, _ in enumerate(ORDERED_FAN_SPEEDS)
+]
+STATE_TO_PERCENTAGE = {
+    state: SPEED_LEVEL_PERCENTAGES[index]
+    for index, speed in enumerate(ORDERED_FAN_SPEEDS)
+    for state in (
+        speed,
+        f"MAN{index + 1}",
+        f"MAN{index + 1}x2",
+        f"MAN{index + 1}x3",
+    )
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -74,7 +95,8 @@ class DucoBoxFanEntity(DucoBoxEntity, FanEntity):
     """DucoBox fan entity."""
 
     entity_description: DucoBoxFanEntityDescription
-    _attr_supported_features = FanEntityFeature.PRESET_MODE
+    _attr_supported_features = FanEntityFeature.PRESET_MODE | FanEntityFeature.SET_SPEED
+    _attr_speed_count = len(ORDERED_FAN_SPEEDS)
 
     def __init__(
         self,
@@ -111,8 +133,33 @@ class DucoBoxFanEntity(DucoBoxEntity, FanEntity):
         node = self.coordinator.data[self._node_id]
         return self.entity_description.value_fn(node)
 
+    @property
+    def percentage(self) -> int | None:
+        """Return the discrete speed level, or None for automatic/other modes."""
+        node = self.coordinator.data[self._node_id]
+        return STATE_TO_PERCENTAGE.get(node.state or "")
+
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         await self.entity_description.set_fn(
             self.coordinator, self._node_id, preset_mode
+        )
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Map Home Assistant's fan slider to supported Duco speed states."""
+        options = self.entity_description.options_fn(
+            self._options_coordinator, self._node_id
+        )
+        if percentage == 0:
+            state = "AUTO"
+        else:
+            state = percentage_to_ordered_list_item(ORDERED_FAN_SPEEDS, percentage)
+
+        if state not in options:
+            raise HomeAssistantError(
+                f"Ventilation state {state} is not available for node {self._node_id}"
+            )
+
+        await self.entity_description.set_fn(
+            self.coordinator, self._node_id, state
         )
